@@ -45,15 +45,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.diws.worddrop.ui.components.AppLoader
 import com.diws.worddrop.ui.components.AudioPlayerButton
 import com.diws.worddrop.ui.components.DifficultyChip
-import com.diws.worddrop.ui.theme.DarkBackground
-import com.diws.worddrop.ui.theme.DarkSurfaceContainer
-import com.diws.worddrop.ui.theme.DarkSurfaceHigh
-import com.diws.worddrop.ui.theme.PrimaryContainerPurple
-import com.diws.worddrop.ui.theme.PrimaryPurple
-import com.diws.worddrop.ui.theme.SecondaryTeal
-import com.diws.worddrop.ui.theme.TertiarySuccess
-import com.diws.worddrop.ui.theme.TextPrimary
-import com.diws.worddrop.ui.theme.TextSecondary
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -66,7 +57,7 @@ fun WordDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBackground)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         if (state.isLoading) {
             AppLoader(subtitle = "Loading word details...")
@@ -90,7 +81,7 @@ fun WordDetailScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = "Back",
-                            tint = TextPrimary
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
@@ -109,7 +100,7 @@ fun WordDetailScreen(
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = DarkSurfaceContainer)
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                     ) {
                         Column(
                             modifier = Modifier.padding(24.dp)
@@ -124,7 +115,7 @@ fun WordDetailScreen(
                                     fontSize = 28.sp,
                                     fontWeight = FontWeight.Black,
                                     letterSpacing = 1.sp,
-                                    color = TextPrimary
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
 
                                 AudioPlayerButton(
@@ -139,7 +130,7 @@ fun WordDetailScreen(
                                 Text(
                                     text = pronunciation,
                                     fontSize = 18.sp,
-                                    color = PrimaryPurple,
+                                    color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Medium,
                                     modifier = Modifier.padding(top = 4.dp)
                                 )
@@ -151,12 +142,12 @@ fun WordDetailScreen(
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(8.dp))
-                                        .background(PrimaryContainerPurple.copy(alpha = 0.2f))
+                                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
                                         .padding(horizontal = 10.dp, vertical = 4.dp)
                                 ) {
                                     Text(
                                         text = partOfSpeech.uppercase(),
-                                        color = PrimaryPurple,
+                                        color = MaterialTheme.colorScheme.primary,
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
                                         letterSpacing = 1.sp
@@ -174,7 +165,7 @@ fun WordDetailScreen(
                                 fontSize = 18.sp,
                                 lineHeight = 26.sp
                             ),
-                            color = TextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
@@ -183,12 +174,12 @@ fun WordDetailScreen(
                     if (!simpleMeaning.isNullOrEmpty()) {
                         SectionContainer(
                             title = "IN SIMPLE WORDS",
-                            accentColor = SecondaryTeal
+                            accentColor = MaterialTheme.colorScheme.secondary
                         ) {
                             Text(
                                 text = simpleMeaning,
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = SecondaryTeal,
+                                color = MaterialTheme.colorScheme.secondary,
                                 fontWeight = FontWeight.Medium
                             )
                         }
@@ -201,7 +192,7 @@ fun WordDetailScreen(
                             Text(
                                 text = "\"$example\"",
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = TextPrimary,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Normal
                             )
                         }
@@ -218,13 +209,13 @@ fun WordDetailScreen(
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(12.dp))
-                                            .background(DarkSurfaceHigh)
+                                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                                             .padding(horizontal = 12.dp, vertical = 6.dp)
                                     ) {
                                         Text(
                                             text = synonym,
                                             style = MaterialTheme.typography.bodyMedium,
-                                            color = TextPrimary
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
                                     }
                                 }
@@ -244,19 +235,21 @@ fun WordDetailScreen(
                         .height(56.dp),
                     shape = RoundedCornerShape(28.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (word.isLearned) TertiarySuccess else PrimaryContainerPurple,
-                        contentColor = if (word.isLearned) DarkBackground else TextPrimary
+                        containerColor = if (word.isLearned) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary,
+                        contentColor = if (word.isLearned) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
                     Icon(
                         imageVector = if (word.isLearned) Icons.Rounded.CheckCircle else Icons.Rounded.CheckCircleOutline,
-                        contentDescription = null
+                        contentDescription = null,
+                        tint = if (word.isLearned) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onPrimary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = if (word.isLearned) "Learned ✓" else "Mark as learned",
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = if (word.isLearned) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
@@ -267,7 +260,7 @@ fun WordDetailScreen(
             ) {
                 Text(
                     text = state.error ?: "Unable to load word",
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -277,13 +270,13 @@ fun WordDetailScreen(
 @Composable
 private fun SectionContainer(
     title: String,
-    accentColor: Color = PrimaryPurple,
+    accentColor: Color = MaterialTheme.colorScheme.primary,
     content: @Composable () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceContainer)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(

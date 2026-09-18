@@ -4,6 +4,7 @@ import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.toArgb
@@ -14,39 +15,69 @@ private val DarkColorScheme = darkColorScheme(
     primary = PrimaryPurple,
     onPrimary = DarkBackground,
     primaryContainer = PrimaryContainerPurple,
-    onPrimaryContainer = TextPrimary,
+    onPrimaryContainer = TextPrimaryDark,
     secondary = SecondaryTeal,
     onSecondary = DarkBackground,
     secondaryContainer = DarkSurfaceHigh,
-    onSecondaryContainer = TextPrimary,
+    onSecondaryContainer = TextPrimaryDark,
     tertiary = TertiarySuccess,
     onTertiary = DarkBackground,
     background = DarkBackground,
-    onBackground = TextPrimary,
+    onBackground = TextPrimaryDark,
     surface = DarkSurface,
-    onSurface = TextPrimary,
+    onSurface = TextPrimaryDark,
     surfaceVariant = DarkSurfaceContainer,
-    onSurfaceVariant = TextSecondary,
+    onSurfaceVariant = TextSecondaryDark,
     surfaceContainer = DarkSurfaceContainer,
     surfaceContainerHigh = DarkSurfaceHigh,
-    outline = OutlineColor,
-    outlineVariant = OutlineVariantColor
+    outline = OutlineColorDark,
+    outlineVariant = OutlineVariantColorDark
+)
+
+private val LightColorScheme = lightColorScheme(
+    primary = PrimaryTerracotta,
+    onPrimary = androidx.compose.ui.graphics.Color.White,
+    primaryContainer = PrimaryContainerTerracotta,
+    onPrimaryContainer = TextPrimaryLight,
+    secondary = SecondaryWarm,
+    onSecondary = androidx.compose.ui.graphics.Color.White,
+    secondaryContainer = LightSurfaceHigh,
+    onSecondaryContainer = TextPrimaryLight,
+    tertiary = TertiaryWarmSuccess,
+    onTertiary = androidx.compose.ui.graphics.Color.White,
+    background = LightBackground,
+    onBackground = TextPrimaryLight,
+    surface = LightSurface,
+    onSurface = TextPrimaryLight,
+    surfaceVariant = LightSurfaceContainer,
+    onSurfaceVariant = TextSecondaryLight,
+    surfaceContainer = LightSurfaceContainer,
+    surfaceContainerHigh = LightSurfaceHigh,
+    outline = OutlineColorLight,
+    outlineVariant = OutlineVariantColorLight
 )
 
 @Composable
 fun WordDropTheme(
-    darkTheme: Boolean = true, // Always dark-first visual language as required by design
+    appTheme: String = "DARK",
     content: @Composable () -> Unit
 ) {
-    val colorScheme = DarkColorScheme
+    val darkTheme = when (appTheme) {
+        "LIGHT" -> false
+        "DARK" -> true
+        else -> isSystemInDarkTheme()
+    }
+
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = colorScheme.background.toArgb()
-            window.navigationBarColor = colorScheme.background.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
-            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = false
+            window.navigationBarColor = colorScheme.surface.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !darkTheme
         }
     }
 

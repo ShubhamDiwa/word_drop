@@ -32,22 +32,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.diws.worddrop.domain.model.WordDifficulty
 import com.diws.worddrop.ui.theme.DarkBackground
-import com.diws.worddrop.ui.theme.DarkSurfaceContainer
-import com.diws.worddrop.ui.theme.DarkSurfaceHigh
-import com.diws.worddrop.ui.theme.PrimaryPurple
 import com.diws.worddrop.ui.theme.SecondaryTeal
-import com.diws.worddrop.ui.theme.TextSecondary
 
 @Composable
 fun NotificationPreview(
     modifier: Modifier = Modifier
 ) {
     var isExpanded by remember { mutableStateOf(false) }
+    val isDark = MaterialTheme.colorScheme.background == DarkBackground
 
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceContainer),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
@@ -63,13 +60,13 @@ fun NotificationPreview(
                     text = "Notification Preview",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryPurple
+                    color = MaterialTheme.colorScheme.primary
                 )
                 
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(DarkSurfaceHigh)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                         .padding(4.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
@@ -78,11 +75,26 @@ fun NotificationPreview(
                 }
             }
 
+            val cardBg = if (isDark) Color(0xFF161325) else Color(0xFFFDFBF7)
+            val cardBorder = if (isDark) {
+                BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+            } else {
+                BorderStroke(1.dp, Color(0xFFD86B4D).copy(alpha = 0.35f))
+            }
+            val brandColor = if (isDark) Color(0xFFC6BFFF) else Color(0xFFD86B4D)
+            val brandSubtitleColor = if (isDark) Color(0xFF8C95A7) else Color(0xFF7A6F66)
+            val titleColor = if (isDark) Color.White else Color(0xFF1C1917)
+            val meaningColor = if (isDark) Color(0xFFE2E8F0) else Color(0xFF44403C)
+            val accentColor = if (isDark) SecondaryTeal else Color(0xFFD86B4D)
+            val definitionColor = if (isDark) Color(0xFFE4E4E7) else Color(0xFF292524)
+            val quoteBg = if (isDark) Color(0xFF221F35) else Color(0xFFF1EBE1)
+            val quoteTextColor = if (isDark) Color(0xFF9A9CA6) else Color(0xFF57534E)
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF161325)),
-                border = BorderStroke(1.dp, PrimaryPurple.copy(alpha = 0.3f))
+                colors = CardDefaults.cardColors(containerColor = cardBg),
+                border = cardBorder
             ) {
                 if (!isExpanded) {
                     Column(
@@ -95,27 +107,27 @@ fun NotificationPreview(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(text = "⚡ ", fontSize = 11.sp)
+                                Text(text = "⚡ ", fontSize = 11.sp, color = brandColor)
                                 Text(
                                     text = "WORD DROP",
-                                    color = Color(0xFFC6BFFF),
+                                    color = brandColor,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 1.sp
                                 )
                                 Text(
                                     text = " • DAILY",
-                                    color = Color(0xFF8C95A7),
+                                    color = brandSubtitleColor,
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
-                            DifficultyPill(difficulty = WordDifficulty.ADVANCED)
+                            DifficultyPill(difficulty = WordDifficulty.ADVANCED, isDark = isDark)
                         }
 
                         Text(
                             text = "EPHEMERAL",
-                            color = Color.White,
+                            color = titleColor,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 0.5.sp
@@ -123,7 +135,7 @@ fun NotificationPreview(
 
                         Text(
                             text = "Lasting for a very short time.",
-                            color = Color(0xFFE2E8F0),
+                            color = meaningColor,
                             fontSize = 13.sp
                         )
                     }
@@ -138,20 +150,20 @@ fun NotificationPreview(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(text = "⚡ ", fontSize = 12.sp, color = Color(0xFFC4B5FD))
+                                Text(text = "⚡ ", fontSize = 12.sp, color = brandColor)
                                 Text(
                                     text = "word drop",
-                                    color = Color(0xFFC4B5FD),
+                                    color = brandColor,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
                                     text = " · daily drop",
-                                    color = Color(0xFF6B6D76),
+                                    color = brandSubtitleColor,
                                     fontSize = 12.sp
                                 )
                             }
-                            DifficultyPill(difficulty = WordDifficulty.INTERMEDIATE)
+                            DifficultyPill(difficulty = WordDifficulty.INTERMEDIATE, isDark = isDark)
                         }
 
                         Row(
@@ -162,20 +174,20 @@ fun NotificationPreview(
                                 modifier = Modifier
                                     .width(3.dp)
                                     .height(24.dp)
-                                    .background(SecondaryTeal)
+                                    .background(accentColor)
                             )
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
                                     text = "EPHEMERAL",
-                                    color = Color.White,
+                                    color = titleColor,
                                     fontSize = 24.sp,
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 0.5.sp
                                 )
                                 Text(
                                     text = "/ɪˈfemərəl/",
-                                    color = SecondaryTeal,
+                                    color = accentColor,
                                     fontSize = 13.sp
                                 )
                             }
@@ -183,19 +195,19 @@ fun NotificationPreview(
 
                         Text(
                             text = "Lasting for a very short period of time.",
-                            color = Color(0xFFE4E4E7),
+                            color = definitionColor,
                             fontSize = 14.sp
                         )
 
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color(0xFF221F35), RoundedCornerShape(8.dp))
+                                .background(quoteBg, RoundedCornerShape(8.dp))
                                 .padding(10.dp)
                         ) {
                             Text(
                                 text = "\"The excitement of the discovery was ephemeral.\"",
-                                color = Color(0xFF9A9CA6),
+                                color = quoteTextColor,
                                 fontSize = 12.5.sp,
                                 fontStyle = FontStyle.Italic
                             )
@@ -206,15 +218,9 @@ fun NotificationPreview(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            /*Text(
-                                text = "🔥 7 day streak",
-                                color = Color(0xFFFAC775),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold
-                            )*/
                             Text(
                                 text = "tap to open →",
-                                color = SecondaryTeal,
+                                color = accentColor,
                                 fontSize = 12.5.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -231,14 +237,14 @@ private fun TabButton(text: String, selected: Boolean, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
-            .background(if (selected) PrimaryPurple else Color.Transparent)
+            .background(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent)
             .clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            color = if (selected) DarkBackground else TextSecondary,
+            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold
         )
@@ -246,11 +252,11 @@ private fun TabButton(text: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun DifficultyPill(difficulty: WordDifficulty) {
+private fun DifficultyPill(difficulty: WordDifficulty, isDark: Boolean = true) {
     val (bgColor, textColor) = when (difficulty) {
-        WordDifficulty.BEGINNER -> Pair(Color(0xFFE2E8F0), Color(0xFF1E293B))
-        WordDifficulty.INTERMEDIATE -> Pair(Color(0xFF3B3378), Color(0xFFC4B5FD))
-        WordDifficulty.ADVANCED -> Pair(Color(0xFF4C1D95), Color(0xFFF3E8FF))
+        WordDifficulty.BEGINNER -> if (isDark) Pair(Color(0xFF234E39), Color(0xFFE2E8F0)) else Pair(Color(0xFFE6F4EA), Color(0xFF0D8267))
+        WordDifficulty.INTERMEDIATE -> if (isDark) Pair(Color(0xFF3B3378), Color(0xFFC4B5FD)) else Pair(Color(0xFFFEF3C7), Color(0xFFB45309))
+        WordDifficulty.ADVANCED -> if (isDark) Pair(Color(0xFF4C1D95), Color(0xFFF3E8FF)) else Pair(Color(0xFFFFE4E6), Color(0xFFBE123C))
     }
 
     Box(

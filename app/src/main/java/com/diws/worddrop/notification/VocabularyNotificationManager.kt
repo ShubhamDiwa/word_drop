@@ -15,6 +15,9 @@ import com.diws.worddrop.R
 import com.diws.worddrop.data.local.WordDao
 import com.diws.worddrop.domain.model.Word
 import com.diws.worddrop.domain.model.WordDifficulty
+import android.content.res.Configuration
+import com.diws.worddrop.data.preferences.UserPreferencesRepository
+import kotlinx.coroutines.flow.first
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,7 +25,8 @@ import javax.inject.Singleton
 @Singleton
 class VocabularyNotificationManager @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val wordDao: WordDao
+    private val wordDao: WordDao,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) {
 
     companion object {
@@ -68,22 +72,55 @@ class VocabularyNotificationManager @Inject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val settings = try {
+            userPreferencesRepository.userSettingsFlow.first()
+        } catch (_: Exception) {
+            null
+        }
+
+        val isDark = when (settings?.appTheme) {
+            "LIGHT" -> false
+            "DARK" -> true
+            else -> (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        }
+
+        val collapsedRes = if (isDark) R.layout.notification_word_collapsed else R.layout.notification_word_collapsed_light
+        val expandedRes = if (isDark) R.layout.notification_word_expanded else R.layout.notification_word_expanded_light
+
         // Collapsed Custom Layout
-        val collapsedLayout = RemoteViews(context.packageName, R.layout.notification_word_collapsed).apply {
+        val collapsedLayout = RemoteViews(context.packageName, collapsedRes).apply {
             setTextViewText(R.id.notification_word_title, word.word.uppercase())
             setTextViewText(R.id.notification_word_meaning, word.simpleMeaning ?: word.definition)
             setTextViewText(R.id.notification_difficulty_chip, word.difficulty.name)
+
+            if (!isDark) {
+                val (badgeRes, textColor) = when (word.difficulty) {
+                    WordDifficulty.BEGINNER -> Pair(R.drawable.badge_beginner_light, Color.parseColor("#0D8267"))
+                    WordDifficulty.INTERMEDIATE -> Pair(R.drawable.badge_intermediate_light, Color.parseColor("#B45309"))
+                    WordDifficulty.ADVANCED -> Pair(R.drawable.badge_advanced_light, Color.parseColor("#BE123C"))
+                }
+                setInt(R.id.notification_difficulty_chip, "setBackgroundResource", badgeRes)
+                setTextColor(R.id.notification_difficulty_chip, textColor)
+            }
         }
 
         // Expanded Custom Layout
-        val expandedLayout = RemoteViews(context.packageName, R.layout.notification_word_expanded).apply {
+        val expandedLayout = RemoteViews(context.packageName, expandedRes).apply {
             setTextViewText(R.id.notification_word_title, word.word.uppercase())
             
             // Difficulty badge background & text color
-            val (badgeRes, textColor) = when (word.difficulty) {
-                WordDifficulty.BEGINNER -> Pair(R.drawable.badge_beginner, Color.parseColor("#E2E8F0"))
-                WordDifficulty.INTERMEDIATE -> Pair(R.drawable.badge_intermediate, Color.parseColor("#26215C"))
-                WordDifficulty.ADVANCED -> Pair(R.drawable.badge_advanced, Color.parseColor("#FFE4E6"))
+            val (badgeRes, textColor) = if (isDark) {
+                when (word.difficulty) {
+                    WordDifficulty.BEGINNER -> Pair(R.drawable.badge_beginner, Color.parseColor("#E2E8F0"))
+                    WordDifficulty.INTERMEDIATE -> Pair(R.drawable.badge_intermediate, Color.parseColor("#26215C"))
+                    WordDifficulty.ADVANCED -> Pair(R.drawable.badge_advanced, Color.parseColor("#FFE4E6"))
+                }
+            } else {
+                when (word.difficulty) {
+                    WordDifficulty.BEGINNER -> Pair(R.drawable.badge_beginner_light, Color.parseColor("#0D8267"))
+                    WordDifficulty.INTERMEDIATE -> Pair(R.drawable.badge_intermediate_light, Color.parseColor("#B45309"))
+                    WordDifficulty.ADVANCED -> Pair(R.drawable.badge_advanced_light, Color.parseColor("#BE123C"))
+                }
             }
             setInt(R.id.notification_difficulty_badge, "setBackgroundResource", badgeRes)
             setTextViewText(R.id.notification_difficulty_badge, word.difficulty.name)

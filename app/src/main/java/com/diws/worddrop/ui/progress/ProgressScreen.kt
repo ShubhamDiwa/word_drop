@@ -44,15 +44,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.diws.worddrop.domain.model.UserLevelInfo
 import com.diws.worddrop.ui.components.AppLoader
 import com.diws.worddrop.ui.components.BannerAd
-import com.diws.worddrop.ui.theme.DarkBackground
-import com.diws.worddrop.ui.theme.DarkSurfaceContainer
-import com.diws.worddrop.ui.theme.DarkSurfaceHigh
-import com.diws.worddrop.ui.theme.PrimaryContainerPurple
-import com.diws.worddrop.ui.theme.PrimaryPurple
 import com.diws.worddrop.ui.theme.SecondaryTeal
 import com.diws.worddrop.ui.theme.TertiarySuccess
-import com.diws.worddrop.ui.theme.TextPrimary
-import com.diws.worddrop.ui.theme.TextSecondary
 
 @Composable
 fun ProgressScreen(
@@ -63,7 +56,7 @@ fun ProgressScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBackground)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         if (state.isLoading) {
             AppLoader(subtitle = "Calculating progress...")
@@ -84,7 +77,7 @@ fun ProgressScreen(
                     text = "Your Progress",
                     style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onBackground
                 )
 
                 // Level & XP Progression Card
@@ -121,14 +114,14 @@ fun ProgressScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = DarkSurfaceContainer)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
                             text = "WEEKLY ACTIVITY",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
-                            color = PrimaryPurple,
+                            color = MaterialTheme.colorScheme.primary,
                             letterSpacing = 1.sp
                         )
 
@@ -161,14 +154,14 @@ fun ProgressScreen(
                                             .fillMaxHeight(barRatio)
                                             .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
                                             .background(
-                                                if (count > 0) SecondaryTeal else DarkSurfaceHigh
+                                                if (count > 0) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surfaceContainerHigh
                                             )
                                     )
                                     Spacer(modifier = Modifier.height(6.dp))
                                     Text(
                                         text = day,
                                         style = MaterialTheme.typography.labelMedium,
-                                        color = TextSecondary,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 11.sp
                                     )
                                 }
@@ -181,21 +174,21 @@ fun ProgressScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = DarkSurfaceContainer)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Rounded.Star,
                                 contentDescription = null,
-                                tint = SecondaryTeal,
+                                tint = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.padding(end = 8.dp)
                             )
                             Text(
                                 text = "VOCABULARY MASTERY",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = SecondaryTeal,
+                                color = MaterialTheme.colorScheme.secondary,
                                 letterSpacing = 1.sp
                             )
                         }
@@ -210,7 +203,7 @@ fun ProgressScreen(
                             text = "${(overallRatio * 100).toInt()}% Total Mastered",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         Spacer(modifier = Modifier.height(10.dp))
@@ -221,8 +214,8 @@ fun ProgressScreen(
                                 .fillMaxWidth()
                                 .height(12.dp)
                                 .clip(RoundedCornerShape(6.dp)),
-                            color = SecondaryTeal,
-                            trackColor = DarkSurfaceHigh
+                            color = MaterialTheme.colorScheme.secondary,
+                            trackColor = MaterialTheme.colorScheme.surfaceContainerHigh
                         )
                     }
                 }
@@ -235,7 +228,7 @@ fun ProgressScreen(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .background(DarkBackground)
+                    .background(MaterialTheme.colorScheme.background)
                     .padding(vertical = 6.dp)
             ) {
                 BannerAd()
@@ -256,7 +249,7 @@ private fun StatCard(
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceContainer)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Icon(
@@ -269,18 +262,18 @@ private fun StatCard(
                 text = value,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelMedium,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium
             )
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.labelMedium,
-                color = TextSecondary.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 fontSize = 10.sp
             )
         }
@@ -295,8 +288,8 @@ private fun LevelProgressCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceContainer),
-        border = BorderStroke(1.dp, PrimaryPurple.copy(alpha = 0.35f))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
     ) {
         Column(
             modifier = Modifier
@@ -304,8 +297,8 @@ private fun LevelProgressCard(
                 .background(
                     Brush.verticalGradient(
                         listOf(
-                            PrimaryContainerPurple.copy(alpha = 0.2f),
-                            DarkSurfaceContainer
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                            MaterialTheme.colorScheme.surfaceContainer
                         )
                     )
                 )
@@ -323,14 +316,14 @@ private fun LevelProgressCard(
                     Box(
                         modifier = Modifier
                             .clip(CircleShape)
-                            .background(PrimaryPurple)
+                            .background(MaterialTheme.colorScheme.primary)
                             .padding(horizontal = 10.dp, vertical = 5.dp)
                     ) {
                         Text(
                             text = "Lv. ${levelInfo.level}",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.ExtraBold,
-                            color = DarkBackground
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                     Column {
@@ -338,12 +331,12 @@ private fun LevelProgressCard(
                             text = levelInfo.title,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "${levelInfo.currentXp} Total XP",
                             style = MaterialTheme.typography.bodySmall,
-                            color = PrimaryPurple,
+                            color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -353,10 +346,10 @@ private fun LevelProgressCard(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
-                        .background(if (streakShields > 0) Color(0xFF132A3E) else DarkSurfaceHigh)
+                        .background(if (streakShields > 0) MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceContainerHigh)
                         .border(
                             1.dp,
-                            if (streakShields > 0) SecondaryTeal else Color.Transparent,
+                            if (streakShields > 0) MaterialTheme.colorScheme.secondary else Color.Transparent,
                             RoundedCornerShape(16.dp)
                         )
                         .padding(horizontal = 10.dp, vertical = 6.dp)
@@ -365,7 +358,7 @@ private fun LevelProgressCard(
                         text = if (streakShields > 0) "🛡️ $streakShields Shields" else "🛡️ 0 Shields",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = if (streakShields > 0) SecondaryTeal else TextSecondary
+                        color = if (streakShields > 0) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -383,13 +376,13 @@ private fun LevelProgressCard(
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 0.8.sp,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = "${levelInfo.currentXp} / ${levelInfo.xpForNextLevel} XP",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryPurple
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -401,8 +394,8 @@ private fun LevelProgressCard(
                     .fillMaxWidth()
                     .height(10.dp)
                     .clip(RoundedCornerShape(5.dp)),
-                color = PrimaryPurple,
-                trackColor = DarkSurfaceHigh
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.surfaceContainerHigh
             )
 
             if (streakShields > 0) {
@@ -410,7 +403,7 @@ private fun LevelProgressCard(
                 Text(
                     text = "🛡️ Your streak is protected! Shields prevent your streak from resetting to 0 if you miss a day.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = SecondaryTeal.copy(alpha = 0.9f),
+                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.9f),
                     fontSize = 11.sp
                 )
             }

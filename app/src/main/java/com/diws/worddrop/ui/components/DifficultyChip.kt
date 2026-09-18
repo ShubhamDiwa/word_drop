@@ -16,9 +16,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.diws.worddrop.domain.model.WordDifficulty
-import com.diws.worddrop.ui.theme.AdvancedColor
-import com.diws.worddrop.ui.theme.BeginnerColor
-import com.diws.worddrop.ui.theme.IntermediateColor
+import com.diws.worddrop.ui.theme.AdvancedColorDark
+import com.diws.worddrop.ui.theme.AdvancedColorLight
+import com.diws.worddrop.ui.theme.BeginnerColorDark
+import com.diws.worddrop.ui.theme.BeginnerColorLight
+import com.diws.worddrop.ui.theme.DarkBackground
+import com.diws.worddrop.ui.theme.IntermediateColorDark
+import com.diws.worddrop.ui.theme.IntermediateColorLight
 
 @Composable
 fun DifficultyChip(
@@ -27,14 +31,19 @@ fun DifficultyChip(
     isSelected: Boolean = false,
     onClick: (() -> Unit)? = null
 ) {
+    val isDark = MaterialTheme.colorScheme.background == DarkBackground
     val (chipColor, label) = when (difficulty) {
-        WordDifficulty.BEGINNER -> BeginnerColor to "BEGINNER"
-        WordDifficulty.INTERMEDIATE -> IntermediateColor to "INTERMEDIATE"
-        WordDifficulty.ADVANCED -> AdvancedColor to "ADVANCED"
+        WordDifficulty.BEGINNER -> (if (isDark) BeginnerColorDark else BeginnerColorLight) to "BEGINNER"
+        WordDifficulty.INTERMEDIATE -> (if (isDark) IntermediateColorDark else IntermediateColorLight) to "INTERMEDIATE"
+        WordDifficulty.ADVANCED -> (if (isDark) AdvancedColorDark else AdvancedColorLight) to "ADVANCED"
     }
 
-    val backgroundColor = if (isSelected) chipColor.copy(alpha = 0.25f) else chipColor.copy(alpha = 0.12f)
-    val borderColor = if (isSelected) chipColor else Color.Transparent
+    val backgroundColor = if (isSelected) {
+        chipColor.copy(alpha = if (isDark) 0.25f else 0.18f)
+    } else {
+        chipColor.copy(alpha = if (isDark) 0.12f else 0.10f)
+    }
+    val borderColor = if (isSelected) chipColor else chipColor.copy(alpha = if (isDark) 0.3f else 0.25f)
 
     Box(
         modifier = modifier

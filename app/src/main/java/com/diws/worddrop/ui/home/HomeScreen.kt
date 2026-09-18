@@ -64,15 +64,6 @@ import com.diws.worddrop.ui.components.AudioPlayerButton
 import com.diws.worddrop.ui.components.BannerAd
 import com.diws.worddrop.ui.components.DifficultyChip
 import com.diws.worddrop.ui.components.WordCard
-import com.diws.worddrop.ui.theme.DarkBackground
-import com.diws.worddrop.ui.theme.DarkSurfaceContainer
-import com.diws.worddrop.ui.theme.DarkSurfaceHigh
-import com.diws.worddrop.ui.theme.PrimaryContainerPurple
-import com.diws.worddrop.ui.theme.PrimaryPurple
-import com.diws.worddrop.ui.theme.SecondaryTeal
-import com.diws.worddrop.ui.theme.TertiarySuccess
-import com.diws.worddrop.ui.theme.TextPrimary
-import com.diws.worddrop.ui.theme.TextSecondary
 
 @Composable
 fun HomeScreen(
@@ -85,7 +76,7 @@ fun HomeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBackground)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         if (state.isLoading) {
             AppLoader(subtitle = "Preparing today's vocabulary...")
@@ -144,7 +135,7 @@ fun HomeScreen(
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(24.dp),
-                            colors = CardDefaults.cardColors(containerColor = DarkSurfaceContainer)
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                         ) {
                             Column(
                                 modifier = Modifier.padding(20.dp),
@@ -157,20 +148,20 @@ fun HomeScreen(
                                     Icon(
                                         imageVector = Icons.Rounded.AutoAwesome,
                                         contentDescription = null,
-                                        tint = PrimaryPurple
+                                        tint = MaterialTheme.colorScheme.primary
                                     )
                                     Text(
                                         text = "Never miss a Word Drop",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = TextPrimary
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
 
                                 Text(
                                     text = "Get a new vocabulary word throughout your day, right when you need it.",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = TextSecondary
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
 
                                 Row(
@@ -181,7 +172,7 @@ fun HomeScreen(
                                     TextButton(
                                         onClick = { dismissed = true }
                                     ) {
-                                        Text(text = "Maybe later", color = TextSecondary)
+                                        Text(text = "Maybe later", color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
 
                                     Spacer(modifier = Modifier.width(8.dp))
@@ -191,12 +182,12 @@ fun HomeScreen(
                                             permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                                         },
                                         colors = ButtonDefaults.buttonColors(
-                                            containerColor = PrimaryPurple,
-                                            contentColor = DarkBackground
+                                            containerColor = MaterialTheme.colorScheme.primary,
+                                            contentColor = MaterialTheme.colorScheme.onPrimary
                                         ),
                                         shape = RoundedCornerShape(12.dp)
                                     ) {
-                                        Text(text = "Enable notifications", color = DarkBackground, fontWeight = FontWeight.Bold)
+                                        Text(text = "Enable notifications", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -236,13 +227,13 @@ fun HomeScreen(
                             text = "Today's Vocabulary",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         Text(
                             text = "${state.todayWords.size} Words",
                             style = MaterialTheme.typography.labelMedium,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -262,7 +253,7 @@ fun HomeScreen(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .background(DarkBackground)
+                    .background(MaterialTheme.colorScheme.background)
                     .padding(vertical = 6.dp)
             ) {
                 BannerAd()
@@ -286,14 +277,14 @@ fun HeaderSection(
             Text(
                 text = "Let words find you.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = PrimaryPurple,
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium
             )
             Text(
                 text = "Word Drop",
                 style = MaterialTheme.typography.displayMedium,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = MaterialTheme.colorScheme.onBackground
             )
         }
 
@@ -309,8 +300,8 @@ fun HeaderSection(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
-                        .background(Color(0xFF2E1C38))
-                        .border(1.dp, Color(0xFFFF9800), RoundedCornerShape(20.dp))
+                        .background(Color(0xFFFF9800).copy(alpha = 0.15f))
+                        .border(1.dp, Color(0xFFFF9800).copy(alpha = 0.5f), RoundedCornerShape(20.dp))
                         .padding(horizontal = 10.dp, vertical = 5.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -335,13 +326,13 @@ fun HeaderSection(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
-                            .background(Color(0xFF132A3E))
-                            .border(1.dp, SecondaryTeal, RoundedCornerShape(20.dp))
+                            .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f))
+                            .border(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
                             .padding(horizontal = 8.dp, vertical = 5.dp)
                     ) {
                         Text(
                             text = "🛡️ $streakShields",
-                            color = SecondaryTeal,
+                            color = MaterialTheme.colorScheme.secondary,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -353,15 +344,15 @@ fun HeaderSection(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
-                    .background(PrimaryContainerPurple.copy(alpha = 0.25f))
-                    .border(1.dp, PrimaryPurple.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
+                    .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f), RoundedCornerShape(12.dp))
                     .padding(horizontal = 8.dp, vertical = 3.dp)
             ) {
                 Text(
                     text = "⚡ Lv.${levelInfo.level} • ${levelInfo.currentXp} XP",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryPurple
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -375,7 +366,7 @@ fun ProgressCard(learnedToday: Int, target: Int) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceContainer)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
             Row(
@@ -387,13 +378,13 @@ fun ProgressCard(learnedToday: Int, target: Int) {
                     text = "Daily Progress",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
                     text = "$learnedToday of $target Learned",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = SecondaryTeal,
+                    color = MaterialTheme.colorScheme.secondary,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -406,8 +397,8 @@ fun ProgressCard(learnedToday: Int, target: Int) {
                     .fillMaxWidth()
                     .height(10.dp)
                     .clip(RoundedCornerShape(5.dp)),
-                color = SecondaryTeal,
-                trackColor = DarkSurfaceHigh
+                color = MaterialTheme.colorScheme.secondary,
+                trackColor = MaterialTheme.colorScheme.surfaceContainerHigh
             )
         }
     }
@@ -423,14 +414,14 @@ fun WordOfTheDaySection(word: Word, onCardClick: () -> Unit) {
             Icon(
                 imageVector = Icons.Rounded.AutoAwesome,
                 contentDescription = null,
-                tint = PrimaryPurple,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp)
             )
             Text(
                 text = "WORD OF THE DAY",
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryPurple,
+                color = MaterialTheme.colorScheme.primary,
                 letterSpacing = 1.sp
             )
         }
@@ -442,7 +433,7 @@ fun WordOfTheDaySection(word: Word, onCardClick: () -> Unit) {
                 .fillMaxWidth()
                 .clickable { onCardClick() },
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = DarkSurfaceContainer),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Column(
@@ -451,8 +442,8 @@ fun WordOfTheDaySection(word: Word, onCardClick: () -> Unit) {
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
-                                PrimaryContainerPurple.copy(alpha = 0.15f),
-                                DarkSurfaceContainer
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f),
+                                MaterialTheme.colorScheme.surfaceContainer
                             )
                         )
                     )
@@ -469,7 +460,7 @@ fun WordOfTheDaySection(word: Word, onCardClick: () -> Unit) {
                             fontSize = 32.sp,
                             fontWeight = FontWeight.ExtraBold,
                             letterSpacing = 1.sp,
-                            color = TextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         word.pronunciation?.let { pronunciation ->
@@ -477,7 +468,7 @@ fun WordOfTheDaySection(word: Word, onCardClick: () -> Unit) {
                                 text = pronunciation,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = PrimaryPurple,
+                                color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.padding(top = 2.dp)
                             )
                         }
@@ -498,7 +489,7 @@ fun WordOfTheDaySection(word: Word, onCardClick: () -> Unit) {
                 Text(
                     text = word.definition,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 word.example?.let { example ->
@@ -506,7 +497,7 @@ fun WordOfTheDaySection(word: Word, onCardClick: () -> Unit) {
                     Text(
                         text = "\"$example\"",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Normal
                     )
                 }
@@ -516,7 +507,7 @@ fun WordOfTheDaySection(word: Word, onCardClick: () -> Unit) {
                 Text(
                     text = "Tap to view full definition →",
                     style = MaterialTheme.typography.labelLarge,
-                    color = SecondaryTeal,
+                    color = MaterialTheme.colorScheme.secondary,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -533,8 +524,8 @@ fun PracticeQuickCard(
             .fillMaxWidth()
             .clickable(onClick = onPracticeClick),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceContainer),
-        border = BorderStroke(1.dp, PrimaryPurple.copy(alpha = 0.35f))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
     ) {
         Row(
             modifier = Modifier
@@ -551,7 +542,7 @@ fun PracticeQuickCard(
                     modifier = Modifier
                         .size(46.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(PrimaryContainerPurple.copy(alpha = 0.2f)),
+                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(text = "🎯", fontSize = 22.sp)
@@ -564,12 +555,12 @@ fun PracticeQuickCard(
                         text = "Practice & Quizzes",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = "Flashcards • 2-Min Daily Quiz",
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -577,7 +568,7 @@ fun PracticeQuickCard(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
-                    .background(PrimaryPurple)
+                    .background(MaterialTheme.colorScheme.primary)
                     .padding(horizontal = 14.dp, vertical = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -585,7 +576,7 @@ fun PracticeQuickCard(
                     text = "Play",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color = DarkBackground
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
         }

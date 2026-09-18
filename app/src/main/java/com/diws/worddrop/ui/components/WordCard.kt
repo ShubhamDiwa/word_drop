@@ -25,11 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.diws.worddrop.domain.model.Word
-import com.diws.worddrop.ui.theme.DarkSurfaceContainer
-import com.diws.worddrop.ui.theme.PrimaryPurple
-import com.diws.worddrop.ui.theme.TertiarySuccess
-import com.diws.worddrop.ui.theme.TextPrimary
-import com.diws.worddrop.ui.theme.TextSecondary
+
 
 @Composable
 fun WordCard(
@@ -42,7 +38,7 @@ fun WordCard(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceContainer),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -60,7 +56,7 @@ fun WordCard(
                         text = word.word.uppercase(),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     DifficultyChip(difficulty = word.difficulty)
@@ -69,7 +65,7 @@ fun WordCard(
                         Icon(
                             imageVector = Icons.Rounded.CheckCircle,
                             contentDescription = "Learned",
-                            tint = TertiarySuccess,
+                            tint = MaterialTheme.colorScheme.tertiary,
                             modifier = Modifier.padding(start = 2.dp)
                         )
                     }
@@ -80,7 +76,7 @@ fun WordCard(
                     Text(
                         text = pronunciation,
                         style = MaterialTheme.typography.labelMedium,
-                        color = PrimaryPurple,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(top = 2.dp)
                     )
                 }
@@ -91,7 +87,7 @@ fun WordCard(
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2
                 )
             }
@@ -99,7 +95,7 @@ fun WordCard(
             Icon(
                 imageVector = Icons.Rounded.ChevronRight,
                 contentDescription = "View detail",
-                tint = TextSecondary
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

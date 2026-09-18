@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/notification_card_bg_light"
+    android:orientation="vertical"
+    android:paddingHorizontal="18dp"
+    android:paddingVertical="16dp">
+
+    <!-- Header Row (top) -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⚡ "
+                android:textColor="#D86B4D"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.03"
+                android:text="worddrop"
+                android:textColor="#D86B4D"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=" · daily drop"
+                android:textColor="#7A6F66"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/notification_difficulty_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/badge_intermediate_light"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="3dp"
+            android:text="INTERMEDIATE"
+            android:textColor="#B45309"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <!-- Word (hero element) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- Vertical accent bar -->
+            <FrameLayout
+                android:layout_width="3dp"
+                android:layout_height="22dp"
+                android:background="#D86B4D" />
+
+            <TextView
+                android:id="@+id/notification_word_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:letterSpacing="0.04"
+                android:text="EPHEMERAL"
+                android:textColor="#1C1917"
+                android:textSize="26sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Phonetic spelling directly below, indented past accent bar -->
+        <TextView
+            android:id="@+id/notification_pronunciation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="13dp"
+            android:layout_marginTop="2dp"
+            android:text="/ɪˈfemərəl/"
+            android:textColor="#D86B4D"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <!-- Definition -->
+    <TextView
+        android:id="@+id/notification_definition"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:lineSpacingMultiplier="1.25"
+        android:text="Lasting for a very short period of time."
+        android:textColor="#292524"
+        android:textSize="14sp" />
+
+    <!-- Example Sentence (left-border quote block) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/notification_quote_bg_light"
+        android:paddingStart="10dp"
+        android:paddingVertical="4dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/notification_example"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lineSpacingMultiplier="1.25"
+            android:text="&quot;The excitement was ephemeral.&quot;"
+            android:textColor="#57534E"
+            android:textSize="12.5sp"
+            android:textStyle="italic" />
+    </LinearLayout>
+
+    <!-- Footer Row (bottom, space-between) -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:text="tap to open →"
+            android:textColor="#D86B4D"
+            android:textSize="12.5sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+</LinearLayout>

@@ -69,14 +69,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.diws.worddrop.ui.components.DeveloperInfoSheet
 import com.diws.worddrop.ui.components.NotificationPreview
-import com.diws.worddrop.ui.theme.DarkBackground
-import com.diws.worddrop.ui.theme.DarkSurfaceContainer
-import com.diws.worddrop.ui.theme.DarkSurfaceHigh
-import com.diws.worddrop.ui.theme.PrimaryContainerPurple
-import com.diws.worddrop.ui.theme.PrimaryPurple
-import com.diws.worddrop.ui.theme.SecondaryTeal
-import com.diws.worddrop.ui.theme.TextPrimary
-import com.diws.worddrop.ui.theme.TextSecondary
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -106,7 +98,7 @@ fun SettingsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBackground)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
@@ -126,7 +118,7 @@ fun SettingsScreen(
                     text = "Settings",
                     style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onBackground
                 )
 
                 OutlinedButton(
@@ -136,14 +128,14 @@ fun SettingsScreen(
                     },
                     modifier = Modifier.height(36.dp),
                     shape = RoundedCornerShape(18.dp),
-                    border = BorderStroke(1.dp, PrimaryPurple.copy(alpha = 0.4f)),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryPurple)
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Favorite,
                         contentDescription = null,
-                        tint = PrimaryPurple,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
@@ -151,7 +143,7 @@ fun SettingsScreen(
                         text = "Support Us",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
-                        color = PrimaryPurple
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -160,7 +152,7 @@ fun SettingsScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = DarkSurfaceContainer)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Row(
@@ -173,12 +165,12 @@ fun SettingsScreen(
                                 text = "Vocabulary Notifications",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = TextPrimary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 text = "Receive Word Drop throughout the day",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = TextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
@@ -189,10 +181,10 @@ fun SettingsScreen(
                                 viewModel.setNotificationsEnabled(it)
                             },
                             colors = SwitchDefaults.colors(
-                                checkedThumbColor = DarkBackground,
-                                checkedTrackColor = PrimaryPurple,
-                                uncheckedThumbColor = TextSecondary,
-                                uncheckedTrackColor = DarkSurfaceHigh
+                                checkedThumbColor = MaterialTheme.colorScheme.surface,
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                uncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHigh
                             )
                         )
                     }
@@ -205,7 +197,7 @@ fun SettingsScreen(
                             text = "Words per day: ${settings.wordsPerDay}",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         Slider(
@@ -220,9 +212,9 @@ fun SettingsScreen(
                             valueRange = 1f..10f,
                             steps = 8,
                             colors = SliderDefaults.colors(
-                                thumbColor = PrimaryPurple,
-                                activeTrackColor = PrimaryPurple,
-                                inactiveTrackColor = DarkSurfaceHigh
+                                thumbColor = MaterialTheme.colorScheme.primary,
+                                activeTrackColor = MaterialTheme.colorScheme.primary,
+                                inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHigh
                             )
                         )
 
@@ -238,12 +230,12 @@ fun SettingsScreen(
                                 text = "Scheduled Times (${settings.notificationTimes.size}/10)",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = PrimaryPurple
+                                color = MaterialTheme.colorScheme.primary
                             )
                             Text(
                                 text = "Tap time to edit, × to remove",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = TextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
@@ -258,7 +250,7 @@ fun SettingsScreen(
                                 Row(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(DarkSurfaceHigh)
+                                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                                         .clickable {
                                             HapticFeedbackHelper.performClick(view, context)
                                             editingTime = time
@@ -271,7 +263,7 @@ fun SettingsScreen(
                                     Text(
                                         text = time,
                                         style = MaterialTheme.typography.labelMedium,
-                                        color = TextPrimary
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                     if (settings.notificationTimes.size > 1) {
                                         Box(
@@ -283,7 +275,7 @@ fun SettingsScreen(
                                             Icon(
                                                 imageVector = Icons.Rounded.Close,
                                                 contentDescription = "Remove time",
-                                                tint = TextSecondary,
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 modifier = Modifier.height(14.dp)
                                             )
                                         }
@@ -297,7 +289,7 @@ fun SettingsScreen(
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(12.dp))
-                                            .background(PrimaryPurple.copy(alpha = 0.2f))
+                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
                                             .clickable {
                                                 HapticFeedbackHelper.performClick(view, context)
                                                 editingTime = null
@@ -309,10 +301,69 @@ fun SettingsScreen(
                                         Icon(
                                             imageVector = Icons.Rounded.Add,
                                             contentDescription = "Add time",
-                                            tint = PrimaryPurple
+                                            tint = MaterialTheme.colorScheme.primary
                                         )
                                     }
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // App Theme Selector Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "App Theme",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Choose your preferred visual appearance",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf(
+                            "SYSTEM" to "System",
+                            "LIGHT" to "Light",
+                            "DARK" to "Dark"
+                        ).forEach { (themeKey, label) ->
+                            val isSelected = settings.appTheme == themeKey
+                            val containerBg = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh
+                            val contentFg = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(containerBg)
+                                    .clickable {
+                                        HapticFeedbackHelper.performClick(view, context)
+                                        viewModel.setAppTheme(themeKey)
+                                    }
+                                    .padding(vertical = 10.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = contentFg
+                                )
                             }
                         }
                     }
@@ -326,7 +377,7 @@ fun SettingsScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = DarkSurfaceContainer)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
             ) {
                 Row(
                     modifier = Modifier.padding(18.dp),
@@ -335,7 +386,7 @@ fun SettingsScreen(
                     Icon(
                         imageVector = Icons.Rounded.Info,
                         contentDescription = null,
-                        tint = SecondaryTeal,
+                        tint = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.padding(top = 2.dp, end = 12.dp)
                     )
                     Column {
@@ -343,13 +394,13 @@ fun SettingsScreen(
                             text = "Lock Screen Notifications",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Word Drop uses standard Android system notifications. Lock screen visibility is controlled by your Android device notification settings.",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 13.sp
                         )
                     }
@@ -382,19 +433,21 @@ fun SettingsScreen(
                     .height(54.dp),
                 shape = RoundedCornerShape(27.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = PrimaryContainerPurple,
-                    contentColor = TextPrimary
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
                 Icon(
                     imageVector = Icons.Rounded.NotificationsActive,
-                    contentDescription = null
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Send Sample Notification",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
+                    fontSize = 15.sp,
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
 
@@ -415,11 +468,11 @@ fun SettingsScreen(
 
             AlertDialog(
                 onDismissRequest = { showTimePicker = false },
-                containerColor = DarkSurfaceContainer,
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 title = {
                     Text(
                         text = if (editingTime != null) "Edit Delivery Time" else "Add Delivery Time",
-                        color = TextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 },
                 text = {
@@ -430,14 +483,14 @@ fun SettingsScreen(
                         TimePicker(
                             state = timePickerState,
                             colors = TimePickerDefaults.colors(
-                                clockDialColor = DarkSurfaceHigh,
-                                selectorColor = PrimaryPurple,
-                                containerColor = DarkSurfaceContainer,
-                                periodSelectorBorderColor = PrimaryPurple,
-                                timeSelectorSelectedContainerColor = PrimaryPurple,
-                                timeSelectorUnselectedContainerColor = DarkSurfaceHigh,
-                                timeSelectorSelectedContentColor = DarkBackground,
-                                timeSelectorUnselectedContentColor = TextPrimary
+                                clockDialColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                selectorColor = MaterialTheme.colorScheme.primary,
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                periodSelectorBorderColor = MaterialTheme.colorScheme.primary,
+                                timeSelectorSelectedContainerColor = MaterialTheme.colorScheme.primary,
+                                timeSelectorUnselectedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                timeSelectorSelectedContentColor = MaterialTheme.colorScheme.onPrimary,
+                                timeSelectorUnselectedContentColor = MaterialTheme.colorScheme.onSurface
                             )
                         )
                     }
@@ -454,9 +507,12 @@ fun SettingsScreen(
                             }
                             showTimePicker = false
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryPurple)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
                     ) {
-                        Text("Confirm", color = DarkBackground, fontWeight = FontWeight.Bold)
+                        Text("Confirm", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
@@ -464,7 +520,7 @@ fun SettingsScreen(
                         HapticFeedbackHelper.performClick(view, context)
                         showTimePicker = false
                     }) {
-                        Text("Cancel", color = TextSecondary)
+                        Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             )

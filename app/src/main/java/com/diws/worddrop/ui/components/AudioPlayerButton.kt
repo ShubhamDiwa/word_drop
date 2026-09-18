@@ -22,8 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.diws.worddrop.ui.theme.PrimaryContainerPurple
-import com.diws.worddrop.ui.theme.PrimaryPurple
+import androidx.compose.material3.MaterialTheme
 import java.util.Locale
 
 @Suppress("UNUSED_PARAMETER")
@@ -71,14 +70,14 @@ fun AudioPlayerButton(
         modifier = modifier
             .size(size)
             .clip(CircleShape)
-            .background(PrimaryContainerPurple.copy(alpha = 0.3f))
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
             .clickable { speakWord() },
         contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = Icons.Rounded.VolumeUp,
             contentDescription = "Listen to pronunciation",
-            tint = PrimaryPurple,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(size * 0.55f)
         )
     }

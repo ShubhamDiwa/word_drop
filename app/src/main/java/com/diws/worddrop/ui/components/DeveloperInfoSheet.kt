@@ -53,13 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.diws.worddrop.BuildConfig
 import com.diws.worddrop.R
-import com.diws.worddrop.ui.theme.DarkBackground
-import com.diws.worddrop.ui.theme.DarkSurfaceContainer
-import com.diws.worddrop.ui.theme.DarkSurfaceHigh
-import com.diws.worddrop.ui.theme.PrimaryPurple
 import com.diws.worddrop.ui.theme.SecondaryTeal
-import com.diws.worddrop.ui.theme.TextPrimary
-import com.diws.worddrop.ui.theme.TextSecondary
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.rewarded.RewardedAd
@@ -150,8 +144,8 @@ fun DeveloperInfoSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        containerColor = DarkSurfaceContainer,
-        contentColor = TextPrimary
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        contentColor = MaterialTheme.colorScheme.onSurface
     ) {
         Column(
             modifier = Modifier
@@ -171,16 +165,16 @@ fun DeveloperInfoSheet(
                     text = "Contact Us",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.ExtraBold,
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = "Reach out — we'd love to hear from you!",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            HorizontalDivider(color = DarkSurfaceHigh, thickness = 1.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceContainerHigh, thickness = 1.dp)
 
             // ── Social links ─────────────────────────────────────────────
             Column(
@@ -192,7 +186,7 @@ fun DeveloperInfoSheet(
                 }
             }
 
-            HorizontalDivider(color = DarkSurfaceHigh, thickness = 1.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceContainerHigh, thickness = 1.dp)
 
             // ── Support button ────────────────────────────────────────────
             Button(
@@ -219,30 +213,30 @@ fun DeveloperInfoSheet(
                     .height(52.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = PrimaryPurple,
-                    contentColor = DarkBackground
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
                 if (isLoadingAd) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
-                        color = DarkBackground,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         strokeWidth = 2.dp
                     )
                     Spacer(modifier = Modifier.width(10.dp))
-                    Text("Loading Ad...", fontWeight = FontWeight.Bold, color = DarkBackground)
+                    Text("Loading Ad...", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
                 } else {
                     Icon(
                         imageVector = Icons.Rounded.Favorite,
                         contentDescription = null,
-                        tint = DarkBackground
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = "Support Developer (Watch Ad)",
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
-                        color = DarkBackground
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
@@ -262,7 +256,7 @@ private fun ContactRow(link: ContactLink) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(DarkSurfaceHigh)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .clickable {
                 try {
                     val intent = if (link.isEmail) {
@@ -312,12 +306,12 @@ private fun ContactRow(link: ContactLink) {
                 text = link.label,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = link.handle,
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -325,7 +319,7 @@ private fun ContactRow(link: ContactLink) {
         Icon(
             imageVector = Icons.AutoMirrored.Rounded.Launch,
             contentDescription = "Open",
-            tint = TextSecondary,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(16.dp)
         )
     }

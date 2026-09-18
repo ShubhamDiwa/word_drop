@@ -20,7 +20,8 @@ data class UserSettings(
     val difficultyFilter: String = "MIXED",
     val includeReviewWords: Boolean = true,
     val showOnLockScreen: Boolean = true,
-    val notificationTimes: List<String> = listOf("08:00", "12:00", "16:00", "20:00")
+    val notificationTimes: List<String> = listOf("08:00", "12:00", "16:00", "20:00"),
+    val appTheme: String = "DARK"
 )
 
 class UserPreferencesRepository(private val context: Context) {
@@ -32,6 +33,7 @@ class UserPreferencesRepository(private val context: Context) {
         val INCLUDE_REVIEW_WORDS = booleanPreferencesKey("include_review_words")
         val SHOW_ON_LOCK_SCREEN = booleanPreferencesKey("show_on_lock_screen")
         val NOTIFICATION_TIMES = stringPreferencesKey("notification_times")
+        val APP_THEME = stringPreferencesKey("app_theme")
         val LAST_VOCABULARY_SYNC_TIMESTAMP = longPreferencesKey("last_vocabulary_sync_timestamp")
         val HAS_SEEN_ONBOARDING = booleanPreferencesKey("has_seen_onboarding")
         val USER_XP = intPreferencesKey("user_xp")
@@ -46,7 +48,8 @@ class UserPreferencesRepository(private val context: Context) {
             difficultyFilter = preferences[PreferencesKeys.DIFFICULTY_FILTER] ?: "MIXED",
             includeReviewWords = preferences[PreferencesKeys.INCLUDE_REVIEW_WORDS] ?: true,
             showOnLockScreen = preferences[PreferencesKeys.SHOW_ON_LOCK_SCREEN] ?: true,
-            notificationTimes = timesString.split(",").filter { it.isNotBlank() }
+            notificationTimes = timesString.split(",").filter { it.isNotBlank() },
+            appTheme = preferences[PreferencesKeys.APP_THEME] ?: "DARK"
         )
     }
 
@@ -77,6 +80,12 @@ class UserPreferencesRepository(private val context: Context) {
     suspend fun updateShowOnLockScreen(show: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.SHOW_ON_LOCK_SCREEN] = show
+        }
+    }
+
+    suspend fun updateAppTheme(theme: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.APP_THEME] = theme
         }
     }
 

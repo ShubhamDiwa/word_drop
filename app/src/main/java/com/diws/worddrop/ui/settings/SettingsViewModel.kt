@@ -65,6 +65,12 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun setAppTheme(theme: String) {
+        viewModelScope.launch {
+            preferencesRepository.updateAppTheme(theme)
+        }
+    }
+
     fun updateNotificationTimes(times: List<String>) {
         viewModelScope.launch {
             val sortedTimes = times.sorted()

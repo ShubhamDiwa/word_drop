@@ -14,12 +14,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+import androidx.compose.material3.MaterialTheme
+
 @Composable
 fun CalmCard(
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = Color(0xFF171B26),
-    borderColor: Color = Color(0xFFB7BDD2),
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainer,
+    borderColor: Color = MaterialTheme.colorScheme.outlineVariant,
     cornerRadius: Dp = 20.dp,
     content: @Composable () -> Unit
 ) {

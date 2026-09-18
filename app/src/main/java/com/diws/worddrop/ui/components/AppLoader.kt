@@ -32,12 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.diws.worddrop.R
-import com.diws.worddrop.ui.theme.DarkBackground
-import com.diws.worddrop.ui.theme.DarkSurfaceContainer
-import com.diws.worddrop.ui.theme.PrimaryPurple
 import com.diws.worddrop.ui.theme.SecondaryTeal
-import com.diws.worddrop.ui.theme.TextPrimary
-import com.diws.worddrop.ui.theme.TextSecondary
 
 @Composable
 fun AppLoader(
@@ -58,7 +53,7 @@ fun AppLoader(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBackground),
+            .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -71,8 +66,8 @@ fun AppLoader(
                     .scale(scale.value)
                     .size(96.dp)
                     .clip(CircleShape)
-                    .background(DarkSurfaceContainer)
-                    .border(2.dp, PrimaryPurple, CircleShape),
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                    .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
@@ -90,7 +85,7 @@ fun AppLoader(
                 text = "Word Drop",
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -98,7 +93,7 @@ fun AppLoader(
             Text(
                 text = "Let words find you.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = PrimaryPurple,
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium
             )
 
@@ -115,7 +110,7 @@ fun AppLoader(
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.labelMedium,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

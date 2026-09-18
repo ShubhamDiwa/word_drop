@@ -13,16 +13,23 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
+import com.diws.worddrop.data.preferences.UserPreferencesRepository
+import com.diws.worddrop.data.preferences.UserSettings
 import com.diws.worddrop.navigation.AppNavigation
 import com.diws.worddrop.navigation.Screen
 import com.diws.worddrop.notification.VocabularyNotificationManager
 import com.diws.worddrop.ui.theme.WordDropTheme
 import com.diws.worddrop.util.HapticFeedbackHelper
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var userPreferencesRepository: UserPreferencesRepository
 
     private var pendingWordId by mutableStateOf<String?>(null)
     private lateinit var gestureDetector: GestureDetector
@@ -53,7 +60,11 @@ class MainActivity : ComponentActivity() {
         com.diws.worddrop.util.InterstitialAdManager.loadAd(this)
 
         setContent {
-            WordDropTheme {
+            val userSettings by userPreferencesRepository.userSettingsFlow.collectAsStateWithLifecycle(
+                initialValue = UserSettings()
+            )
+
+            WordDropTheme(appTheme = userSettings.appTheme) {
                 val controller = rememberNavController()
 
                 AppNavigation(

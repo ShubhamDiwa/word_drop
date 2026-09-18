@@ -4,10 +4,15 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.platform.LocalDensity
 import com.diws.worddrop.ui.components.CelebrationConfetti
 import com.diws.worddrop.util.InterstitialAdManager
 import androidx.compose.foundation.BorderStroke
@@ -71,16 +76,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.diws.worddrop.domain.model.Word
 import com.diws.worddrop.ui.components.AppLoader
 import com.diws.worddrop.ui.components.DifficultyChip
-import com.diws.worddrop.ui.theme.DarkBackground
-import com.diws.worddrop.ui.theme.DarkSurface
-import com.diws.worddrop.ui.theme.DarkSurfaceContainer
-import com.diws.worddrop.ui.theme.DarkSurfaceHigh
-import com.diws.worddrop.ui.theme.PrimaryContainerPurple
-import com.diws.worddrop.ui.theme.PrimaryPurple
 import com.diws.worddrop.ui.theme.SecondaryTeal
 import com.diws.worddrop.ui.theme.TertiarySuccess
-import com.diws.worddrop.ui.theme.TextPrimary
-import com.diws.worddrop.ui.theme.TextSecondary
 import com.diws.worddrop.util.HapticFeedbackHelper
 
 @Composable
@@ -113,7 +110,7 @@ fun PracticeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBackground)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
@@ -136,7 +133,7 @@ fun PracticeScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                         contentDescription = "Back",
-                        tint = TextPrimary
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
@@ -144,7 +141,7 @@ fun PracticeScreen(
                     text = "Practice & Quiz",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(start = 8.dp)
                 )
             }
@@ -156,7 +153,7 @@ fun PracticeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(DarkSurfaceContainer)
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
                     .padding(4.dp)
             ) {
                 TabButton(
@@ -174,62 +171,39 @@ fun PracticeScreen(
                     selected = state.selectedTab == PracticeTab.QUIZ,
                     onClick = {
                         HapticFeedbackHelper.performClick(view, context)
-                        if (state.selectedTab != PracticeTab.QUIZ) {
-                            viewModel.setTab(PracticeTab.QUIZ)
-                        }
+                        viewModel.setTab(PracticeTab.QUIZ)
                     },
                     modifier = Modifier.weight(1f)
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            if (state.isLoading) {
-                AppLoader(subtitle = "Preparing session...")
-            } else {
-                when (state.selectedTab) {
-                    PracticeTab.FLASHCARDS -> {
-                        FlashcardsContent(
-                            state = state,
-                            onFlip = {
-                                HapticFeedbackHelper.performClick(view, context)
-                                viewModel.flipCard()
-                            },
-                            onAnswer = { mastered ->
-                                HapticFeedbackHelper.performClick(view, context)
-                                viewModel.onFlashcardAnswer(mastered)
-                            },
-                            onRestart = {
-                                HapticFeedbackHelper.performClick(view, context)
-                                viewModel.restartFlashcards()
-                            },
-                            onSwitchToQuiz = {
-                                HapticFeedbackHelper.performClick(view, context)
-                                viewModel.setTab(PracticeTab.QUIZ)
-                            }
-                        )
-                    }
-                    PracticeTab.QUIZ -> {
-                        QuizContent(
-                            state = state,
-                            onSelectOption = { index ->
-                                HapticFeedbackHelper.performClick(view, context)
-                                viewModel.selectQuizOption(index)
-                            },
-                            onNext = {
-                                HapticFeedbackHelper.performClick(view, context)
-                                viewModel.nextQuizQuestion()
-                            },
-                            onRestart = {
-                                HapticFeedbackHelper.performClick(view, context)
-                                viewModel.restartQuiz()
-                            },
-                            onSwitchToFlashcards = {
-                                HapticFeedbackHelper.performClick(view, context)
-                                viewModel.setTab(PracticeTab.FLASHCARDS)
-                            }
-                        )
-                    }
+            // Tab Content
+            AnimatedContent(
+                targetState = state.selectedTab,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
+                },
+                label = "PracticeTabContent",
+                modifier = Modifier.weight(1f)
+            ) { tab ->
+                when (tab) {
+                    PracticeTab.FLASHCARDS -> FlashcardsContent(
+                        state = state,
+                        onFlip = { viewModel.flipCard() },
+                        onAnswer = { mastered -> viewModel.onFlashcardAnswer(mastered) },
+                        onRestart = { viewModel.restartFlashcards() },
+                        onSwitchToQuiz = { viewModel.setTab(PracticeTab.QUIZ) }
+                    )
+
+                    PracticeTab.QUIZ -> QuizContent(
+                        state = state,
+                        onSelectOption = { optionIndex -> viewModel.selectQuizOption(optionIndex) },
+                        onNext = { viewModel.nextQuizQuestion() },
+                        onRestart = { viewModel.restartQuiz() },
+                        onSwitchToFlashcards = { viewModel.setTab(PracticeTab.FLASHCARDS) }
+                    )
                 }
             }
         }
@@ -244,11 +218,11 @@ private fun TabButton(
     modifier: Modifier = Modifier
 ) {
     val backgroundColor by animateColorAsState(
-        targetValue = if (selected) PrimaryContainerPurple else Color.Transparent,
+        targetValue = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
         animationSpec = tween(250)
     )
     val textColor by animateColorAsState(
-        targetValue = if (selected) Color.White else TextSecondary,
+        targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
         animationSpec = tween(250)
     )
 
@@ -281,6 +255,8 @@ private fun FlashcardsContent(
     onRestart: () -> Unit,
     onSwitchToQuiz: () -> Unit
 ) {
+    val density = LocalDensity.current.density
+
     if (state.isFlashcardsCompleted || state.flashcards.isEmpty()) {
         FlashcardsCompletedCard(
             state = state,
@@ -307,7 +283,7 @@ private fun FlashcardsContent(
                 Text(
                     text = "Card ${state.currentCardIndex + 1} of ${state.flashcards.size}",
                     style = MaterialTheme.typography.labelLarge,
-                    color = PrimaryPurple,
+                    color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
@@ -323,8 +299,8 @@ private fun FlashcardsContent(
                     .fillMaxWidth()
                     .height(6.dp)
                     .clip(RoundedCornerShape(3.dp)),
-                color = PrimaryPurple,
-                trackColor = DarkSurfaceHigh
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.surfaceContainerHigh
             )
         }
 
@@ -347,8 +323,8 @@ private fun FlashcardsContent(
                 }
                 .clickable(onClick = onFlip),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = DarkSurfaceContainer),
-            border = BorderStroke(1.5.dp, PrimaryPurple.copy(alpha = 0.3f))
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+            border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
         ) {
             Box(
                 modifier = Modifier
@@ -372,7 +348,7 @@ private fun FlashcardsContent(
                                 Text(
                                     text = it.lowercase(),
                                     style = MaterialTheme.typography.labelMedium,
-                                    color = TextSecondary,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontStyle = FontStyle.Italic
                                 )
                             }
@@ -383,7 +359,7 @@ private fun FlashcardsContent(
                                 text = currentCard.word.uppercase(),
                                 style = MaterialTheme.typography.displayMedium,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = TextPrimary,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 textAlign = TextAlign.Center
                             )
 
@@ -392,7 +368,7 @@ private fun FlashcardsContent(
                                 Text(
                                     text = it,
                                     style = MaterialTheme.typography.titleMedium,
-                                    color = PrimaryPurple
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
@@ -400,7 +376,7 @@ private fun FlashcardsContent(
                         Text(
                             text = "Tap to reveal meaning ↻",
                             style = MaterialTheme.typography.labelMedium,
-                            color = TextSecondary.copy(alpha = 0.7f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         )
                     }
                 } else {
@@ -417,7 +393,7 @@ private fun FlashcardsContent(
                                 text = "MEANING",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = PrimaryPurple,
+                                color = MaterialTheme.colorScheme.primary,
                                 letterSpacing = 1.sp
                             )
                             Spacer(modifier = Modifier.height(4.dp))
@@ -425,7 +401,7 @@ private fun FlashcardsContent(
                             Text(
                                 text = meaning,
                                 style = MaterialTheme.typography.titleMedium,
-                                color = TextPrimary,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 lineHeight = 24.sp
                             )
 
@@ -435,14 +411,14 @@ private fun FlashcardsContent(
                                     text = "EXAMPLE",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = SecondaryTeal,
+                                    color = MaterialTheme.colorScheme.secondary,
                                     letterSpacing = 1.sp
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = "\"$example\"",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = TextSecondary,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontStyle = FontStyle.Italic,
                                     lineHeight = 20.sp
                                 )
@@ -454,14 +430,14 @@ private fun FlashcardsContent(
                                     text = "SYNONYMS",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = TextSecondary,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     letterSpacing = 1.sp
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = currentCard.synonyms.joinToString(", "),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = TextPrimary
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
@@ -469,7 +445,7 @@ private fun FlashcardsContent(
                         Text(
                             text = "Tap to flip back ↺",
                             style = MaterialTheme.typography.labelMedium,
-                            color = TextSecondary.copy(alpha = 0.7f),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             modifier = Modifier
                                 .align(Alignment.CenterHorizontally)
                                 .padding(top = 16.dp)
@@ -508,11 +484,14 @@ private fun FlashcardsContent(
                     .weight(1f)
                     .height(52.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = SecondaryTeal)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    contentColor = MaterialTheme.colorScheme.onTertiary
+                )
             ) {
-                Icon(Icons.Rounded.Check, contentDescription = null, tint = DarkBackground, modifier = Modifier.size(18.dp))
+                Icon(Icons.Rounded.Check, contentDescription = null, tint = MaterialTheme.colorScheme.onTertiary, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("Mastered!", color = DarkBackground, fontWeight = FontWeight.Bold)
+                Text("Mastered!", color = MaterialTheme.colorScheme.onTertiary, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -531,7 +510,7 @@ private fun FlashcardsCompletedCard(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = DarkSurfaceContainer)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
         ) {
             Column(
                 modifier = Modifier
@@ -544,13 +523,13 @@ private fun FlashcardsCompletedCard(
                     modifier = Modifier
                         .size(68.dp)
                         .clip(CircleShape)
-                        .background(PrimaryContainerPurple.copy(alpha = 0.25f)),
+                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.EmojiEvents,
                         contentDescription = null,
-                        tint = PrimaryPurple,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(36.dp)
                     )
                 }
@@ -561,7 +540,7 @@ private fun FlashcardsCompletedCard(
                     text = "Session Complete!",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -569,7 +548,7 @@ private fun FlashcardsCompletedCard(
                 Text(
                     text = "You practiced ${state.flashcards.size} words and marked ${state.flashcardsMasteredCount} as mastered.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
 
@@ -579,14 +558,14 @@ private fun FlashcardsCompletedCard(
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
-                        .background(PrimaryContainerPurple.copy(alpha = 0.15f))
+                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f))
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Bolt,
                         contentDescription = null,
-                        tint = PrimaryPurple,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
@@ -594,7 +573,7 @@ private fun FlashcardsCompletedCard(
                         text = "+${state.flashcardsXpEarned} XP Earned! ⚡",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = PrimaryPurple
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
 
@@ -606,9 +585,12 @@ private fun FlashcardsCompletedCard(
                         .fillMaxWidth()
                         .height(50.dp),
                     shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryContainerPurple)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 ) {
-                    Text("Take Daily Quiz 🎯", fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Take Daily Quiz 🎯", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -619,8 +601,8 @@ private fun FlashcardsCompletedCard(
                         .fillMaxWidth()
                         .height(50.dp),
                     shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, PrimaryPurple.copy(alpha = 0.4f)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryPurple)
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
@@ -671,13 +653,13 @@ private fun QuizContent(
                 Text(
                     text = "Question ${state.currentQuizIndex + 1} of ${state.quizQuestions.size}",
                     style = MaterialTheme.typography.labelLarge,
-                    color = PrimaryPurple,
+                    color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = "Score: ${state.quizScore}",
                     style = MaterialTheme.typography.labelMedium,
-                    color = SecondaryTeal,
+                    color = MaterialTheme.colorScheme.secondary,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -688,8 +670,8 @@ private fun QuizContent(
                     .fillMaxWidth()
                     .height(6.dp)
                     .clip(RoundedCornerShape(3.dp)),
-                color = SecondaryTeal,
-                trackColor = DarkSurfaceHigh
+                color = MaterialTheme.colorScheme.secondary,
+                trackColor = MaterialTheme.colorScheme.surfaceContainerHigh
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -698,13 +680,13 @@ private fun QuizContent(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = DarkSurfaceContainer)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
             ) {
                 Text(
                     text = currentQuestion.questionText,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(20.dp)
                 )
             }
@@ -718,16 +700,16 @@ private fun QuizContent(
                     val isCorrect = index == currentQuestion.correctOptionIndex
 
                     val containerColor = when {
-                        !state.isAnswerRevealed -> DarkSurfaceContainer
-                        isCorrect -> Color(0xFF1B3D34) // Soft green
-                        isSelected && !isCorrect -> Color(0xFF4A1E24) // Soft red
-                        else -> DarkSurfaceContainer.copy(alpha = 0.5f)
+                        !state.isAnswerRevealed -> MaterialTheme.colorScheme.surfaceContainer
+                        isCorrect -> Color(0xFF2E7D32).copy(alpha = 0.2f) // Soft green
+                        isSelected && !isCorrect -> Color(0xFFC62828).copy(alpha = 0.2f) // Soft red
+                        else -> MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.5f)
                     }
 
                     val borderColor = when {
-                        !state.isAnswerRevealed && isSelected -> PrimaryPurple
-                        state.isAnswerRevealed && isCorrect -> Color(0xFF4DDCC6)
-                        state.isAnswerRevealed && isSelected && !isCorrect -> Color(0xFFFF6B8B)
+                        !state.isAnswerRevealed && isSelected -> MaterialTheme.colorScheme.primary
+                        state.isAnswerRevealed && isCorrect -> Color(0xFF2E7D32)
+                        state.isAnswerRevealed && isSelected && !isCorrect -> Color(0xFFC62828)
                         else -> Color.Transparent
                     }
 
@@ -751,7 +733,7 @@ private fun QuizContent(
                             Text(
                                 text = option,
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = TextPrimary,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = if (isSelected || (state.isAnswerRevealed && isCorrect)) FontWeight.Bold else FontWeight.Normal,
                                 modifier = Modifier.weight(1f)
                             )
@@ -761,14 +743,14 @@ private fun QuizContent(
                                     Icon(
                                         imageVector = Icons.Rounded.CheckCircle,
                                         contentDescription = "Correct",
-                                        tint = Color(0xFF4DDCC6),
+                                        tint = Color(0xFF2E7D32),
                                         modifier = Modifier.size(22.dp)
                                     )
                                 } else if (isSelected) {
                                     Icon(
                                         imageVector = Icons.Rounded.Close,
                                         contentDescription = "Wrong",
-                                        tint = Color(0xFFFF6B8B),
+                                        tint = Color(0xFFC62828),
                                         modifier = Modifier.size(22.dp)
                                     )
                                 }
@@ -784,12 +766,12 @@ private fun QuizContent(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = DarkSurfaceHigh)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
                 ) {
                     Text(
                         text = "💡 ${currentQuestion.explanation}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(14.dp)
                     )
                 }
@@ -806,12 +788,15 @@ private fun QuizContent(
                     .height(52.dp)
                     .padding(bottom = 8.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryContainerPurple)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
             ) {
                 Text(
                     text = if (state.currentQuizIndex + 1 >= state.quizQuestions.size) "See Results 🏆" else "Next Question →",
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
         }
@@ -849,7 +834,7 @@ private fun QuizCompletedCard(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = DarkSurfaceContainer),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
             border = if (isPerfect) BorderStroke(1.5.dp, Color(0xFFFFD54F)) else null
         ) {
             Column(
@@ -865,15 +850,15 @@ private fun QuizCompletedCard(
                         .clip(CircleShape)
                         .background(
                             if (isPerfect) Color(0xFFFFD54F).copy(alpha = 0.2f)
-                            else if (percentage >= 75) Color(0xFF1B3D34)
-                            else PrimaryContainerPurple.copy(alpha = 0.25f)
+                            else if (percentage >= 75) MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f)
+                            else MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = if (isPerfect) Icons.Rounded.EmojiEvents else if (percentage >= 75) Icons.Rounded.EmojiEvents else Icons.Rounded.Star,
                         contentDescription = null,
-                        tint = if (isPerfect) Color(0xFFFFD54F) else if (percentage >= 75) SecondaryTeal else PrimaryPurple,
+                        tint = if (isPerfect) Color(0xFFFFD54F) else if (percentage >= 75) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(40.dp)
                     )
                 }
@@ -884,7 +869,7 @@ private fun QuizCompletedCard(
                     text = if (isPerfect) "PERFECT SCORE! 🏆" else if (percentage >= 75) "Outstanding! 🌟" else "Good Effort! 👍",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.ExtraBold,
-                    color = if (isPerfect) Color(0xFFFFD54F) else TextPrimary
+                    color = if (isPerfect) Color(0xFFFFB300) else MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -893,7 +878,7 @@ private fun QuizCompletedCard(
                     text = "You scored $score out of $total ($percentage%)",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryPurple
+                    color = MaterialTheme.colorScheme.primary
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -908,14 +893,14 @@ private fun QuizCompletedCard(
                     Row(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
-                            .background(PrimaryContainerPurple.copy(alpha = 0.15f))
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
                             .padding(horizontal = 14.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Bolt,
                             contentDescription = null,
-                            tint = PrimaryPurple,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
@@ -923,7 +908,7 @@ private fun QuizCompletedCard(
                             text = "+${state.quizXpEarned} XP Earned! ⚡" + (if (isPerfect) " (+50 Bonus!)" else ""),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
-                            color = PrimaryPurple
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
 
@@ -932,14 +917,14 @@ private fun QuizCompletedCard(
                         Row(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(SecondaryTeal.copy(alpha = 0.15f))
+                                .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f))
                                 .padding(horizontal = 14.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.Shield,
                                 contentDescription = null,
-                                tint = SecondaryTeal,
+                                tint = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
@@ -947,7 +932,7 @@ private fun QuizCompletedCard(
                                 text = "Earned Streak Shield! 🛡️ (Active: ${state.activeStreakShields})",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = SecondaryTeal
+                                color = MaterialTheme.colorScheme.secondary
                             )
                         }
                     }
@@ -956,6 +941,9 @@ private fun QuizCompletedCard(
                 Spacer(modifier = Modifier.height(18.dp))
 
                 // Share Score Button
+                val shareButtonColor = if (isPerfect) Color(0xFFFFD54F) else MaterialTheme.colorScheme.secondary
+                val shareTextColor = if (isPerfect) Color(0xFF1E1E1E) else MaterialTheme.colorScheme.onSecondary
+
                 Button(
                     onClick = {
                         HapticFeedbackHelper.performClick(view, context)
@@ -974,18 +962,21 @@ private fun QuizCompletedCard(
                         .fillMaxWidth()
                         .height(48.dp),
                     shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = if (isPerfect) Color(0xFFFFD54F) else SecondaryTeal)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = shareButtonColor,
+                        contentColor = shareTextColor
+                    )
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Share,
                         contentDescription = null,
-                        tint = DarkBackground,
+                        tint = shareTextColor,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Share Score to WhatsApp / Story 🚀",
-                        color = DarkBackground,
+                        color = shareTextColor,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -998,9 +989,12 @@ private fun QuizCompletedCard(
                         .fillMaxWidth()
                         .height(48.dp),
                     shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryContainerPurple)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 ) {
-                    Text("Retake Quiz", fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Retake Quiz", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1011,8 +1005,8 @@ private fun QuizCompletedCard(
                         .fillMaxWidth()
                         .height(48.dp),
                     shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, PrimaryPurple.copy(alpha = 0.4f)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryPurple)
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Text("Review Flashcards 🃏", fontWeight = FontWeight.Bold)
                 }

@@ -51,7 +51,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -89,6 +91,24 @@ fun PracticeScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val view = LocalView.current
+
+    // Play interstitial ad when flashcards session completes
+    LaunchedEffect(state.isFlashcardsCompleted) {
+        if (state.isFlashcardsCompleted && state.flashcards.isNotEmpty()) {
+            delay(1200L)
+            InterstitialAdManager.showAd(context.findActivity())
+        }
+    }
+
+    // Play interstitial ad when daily quiz completes
+    LaunchedEffect(state.isQuizCompleted) {
+        if (state.isQuizCompleted && state.quizQuestions.isNotEmpty()) {
+            // For a perfect score, let the user enjoy the celebration confetti & fanfare first
+            val delayMs = if (state.isPerfectQuizScore) 2500L else 1200L
+            delay(delayMs)
+            InterstitialAdManager.showAd(context.findActivity())
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -155,9 +175,7 @@ fun PracticeScreen(
                     onClick = {
                         HapticFeedbackHelper.performClick(view, context)
                         if (state.selectedTab != PracticeTab.QUIZ) {
-                            InterstitialAdManager.showAd(context.findActivity()) {
-                                viewModel.setTab(PracticeTab.QUIZ)
-                            }
+                            viewModel.setTab(PracticeTab.QUIZ)
                         }
                     },
                     modifier = Modifier.weight(1f)
@@ -187,9 +205,7 @@ fun PracticeScreen(
                             },
                             onSwitchToQuiz = {
                                 HapticFeedbackHelper.performClick(view, context)
-                                InterstitialAdManager.showAd(context.findActivity()) {
-                                    viewModel.setTab(PracticeTab.QUIZ)
-                                }
+                                viewModel.setTab(PracticeTab.QUIZ)
                             }
                         )
                     }
@@ -206,9 +222,7 @@ fun PracticeScreen(
                             },
                             onRestart = {
                                 HapticFeedbackHelper.performClick(view, context)
-                                InterstitialAdManager.showAd(context.findActivity()) {
-                                    viewModel.restartQuiz()
-                                }
+                                viewModel.restartQuiz()
                             },
                             onSwitchToFlashcards = {
                                 HapticFeedbackHelper.performClick(view, context)

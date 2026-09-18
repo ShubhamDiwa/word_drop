@@ -168,10 +168,7 @@ fun AppNavigation(
                         navController.navigate(Screen.WordDetail.createRoute(wordId))
                     },
                     onNavigateToPractice = {
-                        val activity = context as? android.app.Activity
-                        com.diws.worddrop.util.InterstitialAdManager.showAd(activity) {
-                            navController.navigate(Screen.Practice.route)
-                        }
+                        navController.navigate(Screen.Practice.route)
                     }
                 )
             }

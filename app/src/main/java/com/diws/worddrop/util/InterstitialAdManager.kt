@@ -43,7 +43,7 @@ object InterstitialAdManager {
         )
     }
 
-    fun showAd(activity: Activity?, onAdClosed: () -> Unit) {
+    fun showAd(activity: Activity?, onAdClosed: () -> Unit = {}) {
         val ad = interstitialAd
         if (activity != null && ad != null) {
             ad.fullScreenContentCallback = object : FullScreenContentCallback() {

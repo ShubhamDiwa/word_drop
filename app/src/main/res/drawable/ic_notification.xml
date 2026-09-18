@@ -1,0 +1,30 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!--
+        Word Drop notification icon:
+        A raindrop/teardrop shape symbolising a "word drop",
+        with a bold "W" letterform cut out of the centre.
+        Pure white on transparent — required for Android status bar icons.
+    -->
+
+    <!-- Teardrop body: rounded bottom, pointed tip at top -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="
+          M12,2
+          C12,2 4,10.5 4,15.5
+          A8,8 0 0 0 20,15.5
+          C20,10.5 12,2 12,2 Z" />
+
+    <!-- W letterform cutout (rendered in transparent/black to punch through) -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="
+          M7.5,13 L9,18.5 L12,14.5 L15,18.5 L16.5,13
+          L15.2,13 L14.1,17 L12,13.8 L9.9,17 L8.8,13 Z" />
+
+</vector>

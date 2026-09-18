@@ -1,0 +1,24 @@
+*.iml
+.gradle
+.gradle/
+/local.properties
+local.properties
+/.idea/
+.idea/
+.idea
+.kotlin/
+.kotlin
+.DS_Store
+/build
+/build/
+build/
+app/build/
+/captures
+.externalNativeBuild
+.cxx
+
+# Secrets & Service Accounts
+serviceAccountKey.json
+scripts/serviceAccountKey.json
+*.keystore
+*.jks

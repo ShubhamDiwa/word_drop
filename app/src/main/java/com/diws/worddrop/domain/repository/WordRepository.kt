@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface WordRepository {
     fun getAllWords(): Flow<List<Word>>
+    fun getHomeWords(): Flow<List<Word>>   // lean query — unlearned first, max 20
     suspend fun getWordById(id: String): Word?
     fun getWordFlow(id: String): Flow<Word?>
     fun searchWords(query: String): Flow<List<Word>>

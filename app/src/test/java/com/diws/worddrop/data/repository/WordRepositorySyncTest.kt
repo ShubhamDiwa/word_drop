@@ -21,6 +21,7 @@ class WordRepositorySyncTest {
         val deletedIds = mutableListOf<String>()
 
         override fun getAllWords(): Flow<List<WordEntity>> = flowOf(emptyList())
+        override fun getHomeWords(): Flow<List<WordEntity>> = flowOf(emptyList())
         override suspend fun getWordById(id: String): WordEntity? = null
         override fun getWordByIdFlow(id: String): Flow<WordEntity?> = flowOf(null)
         override fun searchWords(query: String): Flow<List<WordEntity>> = flowOf(emptyList())

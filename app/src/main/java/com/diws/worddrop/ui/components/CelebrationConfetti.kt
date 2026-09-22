@@ -94,7 +94,7 @@ fun CelebrationConfetti(
                 if (py in -50f..(canvasHeight + 50f)) {
                     rotate(p.rotation, pivot = Offset(px, py)) {
                         if (p.isDropShape) {
-                            // Raindrop / teardrop shape for "Word Drop"
+                            // Raindrop / teardrop shape for "Wordzip"
                             drawCircle(
                                 color = p.color.copy(alpha = currentAlpha),
                                 radius = p.size / 2f,

@@ -131,7 +131,7 @@ class WordWidgetProvider : AppWidgetProvider() {
                             )
                             views.setOnClickPendingIntent(R.id.widget_container, pendingIntent)
                         } else {
-                            views.setTextViewText(R.id.widget_word_text, "WORD DROP")
+                            views.setTextViewText(R.id.widget_word_text, "WORDZIP")
                             views.setTextViewText(R.id.widget_definition_text, "Open app to discover today's word!")
                             val defaultIntent = Intent(context, MainActivity::class.java)
                             val pendingIntent = PendingIntent.getActivity(

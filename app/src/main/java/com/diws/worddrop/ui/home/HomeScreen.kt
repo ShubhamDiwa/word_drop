@@ -151,7 +151,7 @@ fun HomeScreen(
                                         tint = MaterialTheme.colorScheme.primary
                                     )
                                     Text(
-                                        text = "Never miss a Word Drop",
+                                        text = "Never miss a Wordzip",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface
@@ -281,7 +281,7 @@ fun HeaderSection(
                 fontWeight = FontWeight.Medium
             )
             Text(
-                text = "Word Drop",
+                text = "Wordzip",
                 style = MaterialTheme.typography.displayMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground

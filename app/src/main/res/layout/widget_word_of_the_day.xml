@@ -19,7 +19,7 @@
             android:layout_height="16dp"
             android:src="@drawable/ic_notification"
             android:tint="#8C80FF"
-            android:contentDescription="Word Drop Icon" />
+            android:contentDescription="Wordzip Icon" />
 
         <TextView
             android:layout_width="0dp"

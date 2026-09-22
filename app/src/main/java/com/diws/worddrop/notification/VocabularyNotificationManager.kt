@@ -30,7 +30,7 @@ class VocabularyNotificationManager @Inject constructor(
 ) {
 
     companion object {
-        const val CHANNEL_ID = "vocabulary_notification_channel"
+        const val CHANNEL_ID = "vocabulary_notification_channel_v2"
         const val CHANNEL_NAME = "Vocabulary Notifications"
         const val CHANNEL_DESC = "Delivers English vocabulary words throughout the day"
         const val EXTRA_WORD_ID = "word_id"
@@ -54,8 +54,12 @@ class VocabularyNotificationManager @Inject constructor(
                 description = CHANNEL_DESC
                 enableVibration(true)
                 setShowBadge(true)
+                lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
             }
             notificationManager.createNotificationChannel(channel)
+            try {
+                notificationManager.deleteNotificationChannel("vocabulary_notification_channel")
+            } catch (_: Exception) {}
         }
     }
 
@@ -151,14 +155,22 @@ class VocabularyNotificationManager @Inject constructor(
             val streak = if (learnedCount > 0) learnedCount.coerceAtMost(30) else 1
         }
 
+        val lockVisibility = if (settings?.showOnLockScreen != false) {
+            NotificationCompat.VISIBILITY_PUBLIC
+        } else {
+            NotificationCompat.VISIBILITY_PRIVATE
+        }
+
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle("Wordzip • ${word.word.uppercase()}")
+            .setContentText(word.simpleMeaning ?: word.definition)
             .setCustomContentView(collapsedLayout)
             .setCustomBigContentView(expandedLayout)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setVisibility(lockVisibility)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()

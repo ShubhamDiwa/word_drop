@@ -59,7 +59,7 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun WordDropTheme(
-    appTheme: String = "DARK",
+    appTheme: String = "LIGHT",
     content: @Composable () -> Unit
 ) {
     val darkTheme = when (appTheme) {

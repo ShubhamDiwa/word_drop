@@ -16,6 +16,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "WordDrop"
+rootProject.name = "Wordzip"
 include(":app")
  

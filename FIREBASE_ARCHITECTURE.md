@@ -1,6 +1,6 @@
 # Firebase Vocabulary Architecture
 
-This document describes the architectural integration of Firebase as the cloud master source for Word Drop vocabulary.
+This document describes the architectural integration of Firebase as the cloud master source for Wordzip vocabulary.
 
 ## 1. Flow Overview: `Firebase → Repository → Room`
 

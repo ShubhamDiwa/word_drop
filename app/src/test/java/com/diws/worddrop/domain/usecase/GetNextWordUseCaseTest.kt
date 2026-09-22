@@ -30,6 +30,7 @@ class FakeWordRepository : WordRepository {
     )
 
     override fun getAllWords(): Flow<List<Word>> = flowOf(words)
+    override fun getHomeWords(): Flow<List<Word>> = flowOf(words)
     override suspend fun getWordById(id: String): Word? = words.find { it.id == id }
     override fun getWordFlow(id: String): Flow<Word?> = flowOf(words.find { it.id == id })
     override fun searchWords(query: String): Flow<List<Word>> = flowOf(words.filter { it.word.contains(query, ignoreCase = true) })

@@ -5,8 +5,8 @@
     android:viewportHeight="24">
 
     <!--
-        Word Drop notification icon:
-        A raindrop/teardrop shape symbolising a "word drop",
+        Wordzip notification icon:
+        A raindrop/teardrop shape symbolising "wordzip",
         with a bold "W" letterform cut out of the centre.
         Pure white on transparent — required for Android status bar icons.
     -->

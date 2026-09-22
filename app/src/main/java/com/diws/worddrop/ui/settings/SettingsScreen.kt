@@ -1,7 +1,9 @@
 package com.diws.worddrop.ui.settings
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -27,11 +29,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Launch
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material.icons.rounded.PrivacyTip
+import androidx.compose.material.icons.rounded.QuestionAnswer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -52,6 +58,7 @@ import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -68,6 +75,7 @@ import com.diws.worddrop.util.HapticFeedbackHelper
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.diws.worddrop.ui.components.DeveloperInfoSheet
+import com.diws.worddrop.ui.components.HelpSideSheet
 import com.diws.worddrop.ui.components.NotificationPreview
 import java.util.Locale
 
@@ -83,6 +91,8 @@ fun SettingsScreen(
     var showTimePicker by remember { mutableStateOf(false) }
     var editingTime: String? by remember { mutableStateOf(null) }
     var showDeveloperSheet by remember { mutableStateOf(false) }
+    var showHelpSheet by remember { mutableStateOf(false) }
+    var initialHelpTab by remember { mutableIntStateOf(0) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -121,30 +131,35 @@ fun SettingsScreen(
                     color = MaterialTheme.colorScheme.onBackground
                 )
 
-                OutlinedButton(
-                    onClick = {
-                        HapticFeedbackHelper.performClick(view, context)
-                        showDeveloperSheet = true
-                    },
-                    modifier = Modifier.height(36.dp),
-                    shape = RoundedCornerShape(18.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Favorite,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Support Us",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    OutlinedButton(
+                        onClick = {
+                            HapticFeedbackHelper.performClick(view, context)
+                            showDeveloperSheet = true
+                        },
+                        modifier = Modifier.height(36.dp),
+                        shape = RoundedCornerShape(18.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Favorite,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Support Us",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
 
@@ -168,7 +183,7 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Receive Word Drop throughout the day",
+                                text = "Receive Wordzip throughout the day",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -176,9 +191,18 @@ fun SettingsScreen(
 
                         Switch(
                             checked = settings.notificationsEnabled,
-                            onCheckedChange = {
+                            onCheckedChange = { enabled ->
                                 HapticFeedbackHelper.performClick(view, context)
-                                viewModel.setNotificationsEnabled(it)
+                                if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    val hasPerm = ContextCompat.checkSelfPermission(
+                                        context,
+                                        Manifest.permission.POST_NOTIFICATIONS
+                                    ) == PackageManager.PERMISSION_GRANTED
+                                    if (!hasPerm) {
+                                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                    }
+                                }
+                                viewModel.setNotificationsEnabled(enabled)
                             },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = MaterialTheme.colorScheme.surface,
@@ -398,7 +422,7 @@ fun SettingsScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Word Drop uses standard Android system notifications. Lock screen visibility is controlled by your Android device notification settings.",
+                            text = "Wordzip uses standard Android system notifications. Lock screen visibility is controlled by your Android device notification settings.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 13.sp
@@ -451,6 +475,117 @@ fun SettingsScreen(
                 )
             }
 
+            // Help, FAQ & Privacy Policy Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "Help & Legal",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // FAQ Item
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                            .clickable {
+                                HapticFeedbackHelper.performClick(view, context)
+                                initialHelpTab = 0
+                                showHelpSheet = true
+                            }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.QuestionAnswer,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Frequently Asked Questions",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Learn about Wordzip, Streaks & XP",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Rounded.ChevronRight,
+                            contentDescription = "Open FAQ",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Privacy Policy Item — opens browser directly
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                            .clickable {
+                                HapticFeedbackHelper.performClick(view, context)
+                                try {
+                                    val intent = Intent(
+                                        Intent.ACTION_VIEW,
+                                        Uri.parse("https://sites.google.com/view/worddrop-privacypolicy/home")
+                                    )
+                                    context.startActivity(intent)
+                                } catch (_: Exception) {
+                                    Toast.makeText(context, "Could not open browser", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.PrivacyTip,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Privacy Policy",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "How your data is protected & stored",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.Launch,
+                            contentDescription = "Open Privacy Policy",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
         }
 
@@ -463,7 +598,7 @@ fun SettingsScreen(
             val timePickerState = rememberTimePickerState(
                 initialHour = initHour,
                 initialMinute = initMinute,
-                is24Hour = true
+                is24Hour = false
             )
 
             AlertDialog(
@@ -483,10 +618,18 @@ fun SettingsScreen(
                         TimePicker(
                             state = timePickerState,
                             colors = TimePickerDefaults.colors(
-                                clockDialColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                // surface  = near-white in light / deep-navy in dark  → max contrast for numbers
+                                // onSurface = dark-brown in light / light-gray in dark → clearly visible in both
+                                clockDialColor = MaterialTheme.colorScheme.surface,
+                                clockDialUnselectedContentColor = MaterialTheme.colorScheme.onSurface,
+                                clockDialSelectedContentColor = MaterialTheme.colorScheme.onPrimary,
                                 selectorColor = MaterialTheme.colorScheme.primary,
                                 containerColor = MaterialTheme.colorScheme.surfaceContainer,
                                 periodSelectorBorderColor = MaterialTheme.colorScheme.primary,
+                                periodSelectorSelectedContainerColor = MaterialTheme.colorScheme.primary,
+                                periodSelectorUnselectedContainerColor = MaterialTheme.colorScheme.surface,
+                                periodSelectorSelectedContentColor = MaterialTheme.colorScheme.onPrimary,
+                                periodSelectorUnselectedContentColor = MaterialTheme.colorScheme.onSurface,
                                 timeSelectorSelectedContainerColor = MaterialTheme.colorScheme.primary,
                                 timeSelectorUnselectedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                                 timeSelectorSelectedContentColor = MaterialTheme.colorScheme.onPrimary,
@@ -505,6 +648,15 @@ fun SettingsScreen(
                             } else {
                                 viewModel.addNotificationTime(formattedTime)
                             }
+                            val now = java.util.Calendar.getInstance()
+                            val target = java.util.Calendar.getInstance().apply {
+                                set(java.util.Calendar.HOUR_OF_DAY, timePickerState.hour)
+                                set(java.util.Calendar.MINUTE, timePickerState.minute)
+                                set(java.util.Calendar.SECOND, 0)
+                                set(java.util.Calendar.MILLISECOND, 0)
+                            }
+                            val dayText = if (target.timeInMillis > now.timeInMillis) "today" else "tomorrow"
+                            Toast.makeText(context, "Notification set for $formattedTime ($dayText)", Toast.LENGTH_SHORT).show()
                             showTimePicker = false
                         },
                         colors = ButtonDefaults.buttonColors(
@@ -529,6 +681,13 @@ fun SettingsScreen(
         if (showDeveloperSheet) {
             DeveloperInfoSheet(
                 onDismissRequest = { showDeveloperSheet = false }
+            )
+        }
+
+        if (showHelpSheet) {
+            HelpSideSheet(
+                onDismissRequest = { showHelpSheet = false },
+                initialTab = initialHelpTab
             )
         }
     }

@@ -58,10 +58,12 @@ class MainActivity : ComponentActivity() {
         pendingWordId = extractWordIdFromIntent(intent)
         com.diws.worddrop.widget.WordWidgetProvider.updateAllWidgets(this)
         com.diws.worddrop.util.InterstitialAdManager.loadAd(this)
+        requestNotificationPermissionIfNeeded()
 
         setContent {
+            val initialTheme = userPreferencesRepository.getCachedTheme()
             val userSettings by userPreferencesRepository.userSettingsFlow.collectAsStateWithLifecycle(
-                initialValue = UserSettings()
+                initialValue = UserSettings(appTheme = initialTheme)
             )
 
             WordDropTheme(appTheme = userSettings.appTheme) {

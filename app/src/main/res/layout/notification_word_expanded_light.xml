@@ -32,7 +32,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:letterSpacing="0.03"
-                android:text="worddrop"
+                android:text="wordzip"
                 android:textColor="#D86B4D"
                 android:textSize="12sp"
                 android:textStyle="bold" />
@@ -40,7 +40,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text=" · daily drop"
+                android:text=" · daily zip"
                 android:textColor="#7A6F66"
                 android:textSize="12sp" />
         </LinearLayout>

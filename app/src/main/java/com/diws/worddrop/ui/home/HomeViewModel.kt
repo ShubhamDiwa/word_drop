@@ -37,7 +37,7 @@ class HomeViewModel @Inject constructor(
 
     val uiState: StateFlow<HomeUiState> = combine(
         wordRepository.getWordOfTheDay(),
-        wordRepository.getAllWords(),
+        wordRepository.getHomeWords(),   // lean: max 20 rows, unlearned-first
         getProgressUseCase(),
         userPreferencesRepository.userXpFlow,
         userPreferencesRepository.streakShieldsFlow

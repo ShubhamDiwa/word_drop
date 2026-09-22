@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Word Drop</string>
+    <string name="app_name">Wordzip</string>
     <string name="tag_line">Let words find you.</string>
     <string name="widget_name">Word of the Day</string>
     <string name="widget_description">Learn a new word right on your Home Screen every day.</string>

@@ -165,7 +165,7 @@ private val infoPages = listOf(
         iconTint = PrimaryPurple,
         iconBackground = Color(0xFF2A1E4A),
         title = "Let Words Find You",
-        subtitle = "Word Drop delivers a fresh vocabulary word to your phone every few hours — all day, every day. No effort needed.",
+        subtitle = "Wordzip delivers a fresh vocabulary word to your phone every few hours — all day, every day. No effort needed.",
         accentColor = PrimaryContainerPurple, // deeper saturated purple — clearly visible as button bg
         gradientEnd = Color(0xFF1A1230)
     ),
@@ -173,7 +173,7 @@ private val infoPages = listOf(
         icon = Icons.Rounded.MenuBook,
         iconTint = SecondaryTeal,
         iconBackground = Color(0xFF0D2E2B),
-        title = "Daily Word Drops",
+        title = "Daily Wordzips",
         subtitle = "Learn up to 5 new words a day with full definitions, real pronunciations, and example sentences in context.",
         accentColor = SecondaryTeal,
         gradientEnd = Color(0xFF0A1E1C)
@@ -183,7 +183,7 @@ private val infoPages = listOf(
         iconTint = Color(0xFFFFB74D),
         iconBackground = Color(0xFF2E2010),
         title = "Smart Notifications",
-        subtitle = "Word Drop sends you new words throughout the day as notifications — so you learn naturally, right in your flow.",
+        subtitle = "Wordzip sends you new words throughout the day as notifications — so you learn naturally, right in your flow.",
         accentColor = Color(0xFFFFB74D),
         gradientEnd = Color(0xFF1C1508)
     ),
@@ -575,7 +575,7 @@ private fun SchedulePageContent(
                     lineHeight = 34.sp
                 )
                 Text(
-                    text = "Pick the times you want your daily word drops. You can always change these in Settings.",
+                    text = "Pick the times you want your daily wordzips. You can always change these in Settings.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = TextSecondary,
                     textAlign = TextAlign.Center,
@@ -641,20 +641,24 @@ private fun SchedulePageContent(
         val timePickerState = rememberTimePickerState(initialHour = 8, initialMinute = 0, is24Hour = true)
         AlertDialog(
             onDismissRequest = { showTimePicker = false },
-            containerColor = DarkSurfaceContainer,
-            title = { Text("Add Reminder Time", color = TextPrimary, fontWeight = FontWeight.Bold) },
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            title = { Text("Add Reminder Time", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold) },
             text = {
                 Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     TimePicker(
                         state = timePickerState,
                         colors = TimePickerDefaults.colors(
-                            clockDialColor = DarkSurfaceHigh,
-                            selectorColor = PrimaryPurple,
-                            containerColor = DarkSurfaceContainer,
-                            timeSelectorSelectedContainerColor = PrimaryPurple,
-                            timeSelectorUnselectedContainerColor = DarkSurfaceHigh,
-                            timeSelectorSelectedContentColor = DarkBackground,
-                            timeSelectorUnselectedContentColor = TextPrimary
+                            selectorColor = MaterialTheme.colorScheme.primary,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            periodSelectorBorderColor = MaterialTheme.colorScheme.primary,
+                            periodSelectorSelectedContainerColor = MaterialTheme.colorScheme.primary,
+                            periodSelectorUnselectedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            periodSelectorSelectedContentColor = MaterialTheme.colorScheme.onPrimary,
+                            periodSelectorUnselectedContentColor = MaterialTheme.colorScheme.onSurface,
+                            timeSelectorSelectedContainerColor = MaterialTheme.colorScheme.primary,
+                            timeSelectorUnselectedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            timeSelectorSelectedContentColor = MaterialTheme.colorScheme.onPrimary,
+                            timeSelectorUnselectedContentColor = MaterialTheme.colorScheme.onSurface
                         )
                     )
                 }
@@ -666,12 +670,15 @@ private fun SchedulePageContent(
                         onAddTime(formatted)
                         showTimePicker = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryPurple)
-                ) { Text("Add", color = DarkBackground, fontWeight = FontWeight.Bold) }
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) { Text("Add", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold) }
             },
             dismissButton = {
                 TextButton(onClick = { showTimePicker = false }) {
-                    Text("Cancel", color = TextSecondary)
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         )

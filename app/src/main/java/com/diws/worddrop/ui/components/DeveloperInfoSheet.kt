@@ -196,7 +196,7 @@ fun DeveloperInfoSheet(
                         rewardedAd?.show(activity) { _ ->
                             Toast.makeText(
                                 context,
-                                "Thank you for supporting Word Drop! ❤️",
+                                "Thank you for supporting Wordzip! ❤️",
                                 Toast.LENGTH_LONG
                             ).show()
                             loadAd()
@@ -262,7 +262,7 @@ private fun ContactRow(link: ContactLink) {
                     val intent = if (link.isEmail) {
                         Intent(Intent.ACTION_SENDTO, Uri.parse(link.url)).apply {
                             putExtra(Intent.EXTRA_EMAIL, arrayOf("shubhamdiwakar2698@gmail.com"))
-                            putExtra(Intent.EXTRA_SUBJECT, "Word Drop - Feedback")
+                            putExtra(Intent.EXTRA_SUBJECT, "Wordzip - Feedback")
                         }
                     } else {
                         Intent(Intent.ACTION_VIEW, Uri.parse(link.url))

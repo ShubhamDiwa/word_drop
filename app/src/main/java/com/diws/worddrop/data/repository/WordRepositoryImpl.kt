@@ -11,10 +11,13 @@ import com.diws.worddrop.data.remote.firebase.VocabularyRemoteDataSource
 import com.diws.worddrop.domain.model.Word
 import com.diws.worddrop.domain.model.WordDifficulty
 import com.diws.worddrop.domain.repository.WordRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -28,6 +31,12 @@ class WordRepositoryImpl(
 
     override fun getAllWords(): Flow<List<Word>> {
         return wordDao.getAllWords().map { entities ->
+            entities.map { it.toDomainModel() }
+        }
+    }
+
+    override fun getHomeWords(): Flow<List<Word>> {
+        return wordDao.getHomeWords().map { entities ->
             entities.map { it.toDomainModel() }
         }
     }
@@ -61,7 +70,8 @@ class WordRepositoryImpl(
     }
 
     override fun getWordOfTheDay(): Flow<Word?> = flow {
-        seedInitialDataIfNeeded()
+        // Note: seeding is handled by Application.onCreate — do NOT call it here
+        // to avoid blocking the first UI emit behind a Firebase network round-trip.
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
         var dailyEntity = wordDao.getDailyWordSync(today)
         if (dailyEntity == null) {
@@ -195,7 +205,11 @@ class WordRepositoryImpl(
         if (count == 0) {
             wordDao.insertWords(InitialSeedData.getInitialWords())
         }
-        syncVocabularyWithRemote()
+        // Run Firebase sync in the background so the UI never waits for a
+        // network round-trip before showing locally-available words.
+        CoroutineScope(Dispatchers.IO).launch {
+            syncVocabularyWithRemote()
+        }
     }
 
     private fun String?.isNull_or_empty(): Boolean = this == null || this.trim().isEmpty()

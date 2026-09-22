@@ -41,7 +41,8 @@ class WordDropApplication : Application() {
 
         CoroutineScope(Dispatchers.IO).launch {
             wordRepository.seedInitialDataIfNeeded()
-            wordRepository.syncVocabularyWithRemote()
+            // syncVocabularyWithRemote() is already launched in the background
+            // inside seedInitialDataIfNeeded() — no need to call it again here.
         }
     }
 }

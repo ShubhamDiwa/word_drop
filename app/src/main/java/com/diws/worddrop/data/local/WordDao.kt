@@ -12,6 +12,10 @@ interface WordDao {
     @Query("SELECT * FROM words ORDER BY word ASC")
     fun getAllWords(): Flow<List<WordEntity>>
 
+    // Lean query for home screen: unlearned first, cap at 20 to avoid loading the whole DB
+    @Query("SELECT * FROM words ORDER BY isLearned ASC, timesShown ASC LIMIT 20")
+    fun getHomeWords(): Flow<List<WordEntity>>
+
     @Query("SELECT * FROM words WHERE id = :id LIMIT 1")
     suspend fun getWordById(id: String): WordEntity?
 

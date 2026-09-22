@@ -32,7 +32,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.diws.worddrop.R
-import com.diws.worddrop.ui.theme.SecondaryTeal
 
 @Composable
 fun AppLoader(
@@ -67,14 +66,14 @@ fun AppLoader(
                     .size(96.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceContainer)
-                    .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape),
+                    .border(2.5.dp, MaterialTheme.colorScheme.primary, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
                     painter = painterResource(id = R.mipmap.worddrop_logo),
-                    contentDescription = "Word Drop Logo",
+                    contentDescription = "Wordzip Logo",
                     modifier = Modifier
-                        .size(60.dp)
+                        .fillMaxSize()
                         .clip(CircleShape)
                 )
             }
@@ -82,7 +81,7 @@ fun AppLoader(
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = "Word Drop",
+                text = "Wordzip",
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -101,7 +100,7 @@ fun AppLoader(
 
             CircularProgressIndicator(
                 modifier = Modifier.size(28.dp),
-                color = SecondaryTeal,
+                color = MaterialTheme.colorScheme.primary,
                 strokeWidth = 2.5.dp
             )
 

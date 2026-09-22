@@ -109,7 +109,7 @@ fun NotificationPreview(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(text = "⚡ ", fontSize = 11.sp, color = brandColor)
                                 Text(
-                                    text = "WORD DROP",
+                                    text = "WORDZIP",
                                     color = brandColor,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
@@ -152,13 +152,13 @@ fun NotificationPreview(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(text = "⚡ ", fontSize = 12.sp, color = brandColor)
                                 Text(
-                                    text = "word drop",
+                                    text = "wordzip",
                                     color = brandColor,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = " · daily drop",
+                                    text = " · daily zip",
                                     color = brandSubtitleColor,
                                     fontSize = 12.sp
                                 )

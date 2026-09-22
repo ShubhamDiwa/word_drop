@@ -1,10 +1,10 @@
 # Google AdMob Configuration Guide
 
-Word Drop is integrated with Google AdMob SDK (`com.google.android.gms:play-services-ads`).
+Wordzip is integrated with Google AdMob SDK (`com.google.android.gms:play-services-ads`).
 
 ## Active Production Configuration
 
-Word Drop is configured with production Google AdMob IDs:
+Wordzip is configured with production Google AdMob IDs:
 
 | Component | Active Production ID | File Location |
 | :--- | :--- | :--- |
@@ -16,7 +16,7 @@ Word Drop is configured with production Google AdMob IDs:
 
 ## Steps for Production Release (Google Play Store)
 
-Before publishing Word Drop to Google Play, update the Test IDs with your real AdMob production IDs:
+Before publishing Wordzip to Google Play, update the Test IDs with your real AdMob production IDs:
 
 ### Step 1: Create an AdMob Account & App
 1. Go to [Google AdMob Console](https://admob.google.com/).

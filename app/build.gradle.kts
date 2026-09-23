@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.diws.worddrop"
+    namespace = "com.diws.wordzip"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.diws.worddrop"
+        applicationId = "com.diws.wordzip"
         minSdk = 24
         targetSdk = 35
         versionCode = 1

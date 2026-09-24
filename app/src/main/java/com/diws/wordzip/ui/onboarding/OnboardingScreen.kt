@@ -58,27 +58,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.diws.wordzip.ui.theme.DarkBackground
-import com.diws.wordzip.ui.theme.DarkSurfaceContainer
-import com.diws.wordzip.ui.theme.DarkSurfaceHigh
-import com.diws.wordzip.ui.theme.PrimaryContainerPurple
-import com.diws.wordzip.ui.theme.PrimaryPurple
-import com.diws.wordzip.ui.theme.SecondaryTeal
-import com.diws.wordzip.ui.theme.TertiarySuccess
-import com.diws.wordzip.ui.theme.TextPrimary
-import com.diws.wordzip.ui.theme.TextSecondary
+import com.diws.wordzip.ui.theme.LightBackground
+import com.diws.wordzip.ui.theme.LightSurface
+import com.diws.wordzip.ui.theme.LightSurfaceContainer
+import com.diws.wordzip.ui.theme.LightSurfaceHigh
+import com.diws.wordzip.ui.theme.OutlineColorLight
+import com.diws.wordzip.ui.theme.PrimaryTerracotta
+import com.diws.wordzip.ui.theme.TextPrimaryLight
+import com.diws.wordzip.ui.theme.TextSecondaryLight
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -91,14 +88,14 @@ import kotlin.random.Random
 // ─────────────────────────────────────────────────────────────────────────────
 
 private val dropColors = listOf(
-    Color(0xFFC6BFFF), // PrimaryPurple
-    Color(0xFF8C80FF), // PrimaryContainerPurple
-    Color(0xFF4DDCC6), // SecondaryTeal
-    Color(0xFF4DE082), // TertiarySuccess
+    Color(0xFFD86B4D), // Terracotta
+    Color(0xFFFFDBCE), // Soft peach
+    Color(0xFFD69A55), // Warm gold
+    Color(0xFF5BA773), // Natural green
     Color(0xFFFFB74D), // Amber
-    Color(0xFFFF6B8B), // Pink
-    Color(0xFF64B5F6), // Light blue
-    Color(0xFFFFD54F), // Yellow
+    Color(0xFFFF8A65), // Soft orange
+    Color(0xFF81C784), // Light green
+    Color(0xFFFFCC80), // Light amber
 )
 
 private data class Drop(
@@ -156,45 +153,50 @@ private data class OnboardingPage(
     val title: String,
     val subtitle: String,
     val accentColor: Color,
+    val gradientStart: Color,
     val gradientEnd: Color
 )
 
 private val infoPages = listOf(
     OnboardingPage(
         icon = Icons.Rounded.AutoAwesome,
-        iconTint = PrimaryPurple,
-        iconBackground = Color(0xFF2A1E4A),
+        iconTint = Color(0xFFD86B4D),           // Terracotta
+        iconBackground = Color(0xFFFFEDE7),      // Soft peach tint
         title = "Let Words Find You",
         subtitle = "Wordzip delivers a fresh vocabulary word to your phone every few hours — all day, every day. No effort needed.",
-        accentColor = PrimaryContainerPurple, // deeper saturated purple — clearly visible as button bg
-        gradientEnd = Color(0xFF1A1230)
+        accentColor = Color(0xFFD86B4D),
+        gradientStart = Color(0xFFFFF3EE),
+        gradientEnd = LightBackground
     ),
     OnboardingPage(
         icon = Icons.Rounded.MenuBook,
-        iconTint = SecondaryTeal,
-        iconBackground = Color(0xFF0D2E2B),
+        iconTint = Color(0xFF0D8267),            // Deep teal
+        iconBackground = Color(0xFFDDF5F0),      // Soft mint tint
         title = "Daily Wordzips",
         subtitle = "Learn up to 5 new words a day with full definitions, real pronunciations, and example sentences in context.",
-        accentColor = SecondaryTeal,
-        gradientEnd = Color(0xFF0A1E1C)
+        accentColor = Color(0xFF0D8267),
+        gradientStart = Color(0xFFF0FAF8),
+        gradientEnd = LightBackground
     ),
     OnboardingPage(
         icon = Icons.Rounded.Notifications,
-        iconTint = Color(0xFFFFB74D),
-        iconBackground = Color(0xFF2E2010),
+        iconTint = Color(0xFFB45309),            // Rich amber
+        iconBackground = Color(0xFFFFF4DE),      // Soft amber tint
         title = "Smart Notifications",
         subtitle = "Wordzip sends you new words throughout the day as notifications — so you learn naturally, right in your flow.",
-        accentColor = Color(0xFFFFB74D),
-        gradientEnd = Color(0xFF1C1508)
+        accentColor = Color(0xFFB45309),
+        gradientStart = Color(0xFFFFF9EC),
+        gradientEnd = LightBackground
     ),
     OnboardingPage(
         icon = Icons.Rounded.LocalFireDepartment,
-        iconTint = TertiarySuccess,
-        iconBackground = Color(0xFF0D2E1A),
+        iconTint = Color(0xFF1B8755),            // Deep forest green
+        iconBackground = Color(0xFFDDF4EA),      // Soft green tint
         title = "Build Your Streak",
         subtitle = "Come back daily, build your streak, and watch your vocabulary grow. Your future self will thank you.",
-        accentColor = TertiarySuccess,
-        gradientEnd = Color(0xFF071A10)
+        accentColor = Color(0xFF1B8755),
+        gradientStart = Color(0xFFF0FAF5),
+        gradientEnd = LightBackground
     )
 )
 
@@ -229,9 +231,9 @@ fun OnboardingScreen(onFinished: (notificationTimes: List<String>) -> Unit) {
 
     val isLastPage = pagerState.currentPage == TOTAL_PAGES - 1
     val currentAccent = if (pagerState.currentPage < infoPages.size)
-        infoPages[pagerState.currentPage].accentColor else PrimaryPurple
+        infoPages[pagerState.currentPage].accentColor else PrimaryTerracotta
 
-    Box(modifier = Modifier.fillMaxSize().background(DarkBackground)) {
+    Box(modifier = Modifier.fillMaxSize().background(LightBackground)) {
 
         HorizontalPager(
             state = pagerState,
@@ -262,7 +264,7 @@ fun OnboardingScreen(onFinished: (notificationTimes: List<String>) -> Unit) {
                 onClick = { onFinished(selectedTimes.toList()) },
                 modifier = Modifier.align(Alignment.TopEnd).padding(top = 48.dp, end = 16.dp)
             ) {
-                Text("Skip", color = TextSecondary, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                Text("Skip", color = TextSecondaryLight, fontSize = 15.sp, fontWeight = FontWeight.Medium)
             }
         }
 
@@ -292,15 +294,23 @@ fun OnboardingScreen(onFinished: (notificationTimes: List<String>) -> Unit) {
                             }
                         }
                     },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .shadow(
+                            elevation = 8.dp,
+                            shape = RoundedCornerShape(18.dp),
+                            ambientColor = currentAccent.copy(alpha = 0.25f),
+                            spotColor = currentAccent.copy(alpha = 0.35f)
+                        ),
                     shape = RoundedCornerShape(18.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = currentAccent,
-                        contentColor = DarkBackground
+                        contentColor = Color.White
                     )
                 ) {
                     Text(
-                        text = if (isLastPage) "Get Started 🚀" else "Next",
+                        text = if (isLastPage) "Get Started" else "Next",
                         fontWeight = FontWeight.Bold,
                         fontSize = 17.sp
                     )
@@ -351,13 +361,13 @@ fun OnboardingScreen(onFinished: (notificationTimes: List<String>) -> Unit) {
                     text = "Let's Go!",
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.ExtraBold,
-                    color = TextPrimary,
+                    color = TextPrimaryLight,
                     textAlign = TextAlign.Center
                 )
                 Text(
                     text = "Your vocabulary journey starts now",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = TextSecondary,
+                    color = TextSecondaryLight,
                     textAlign = TextAlign.Center
                 )
             }
@@ -453,8 +463,8 @@ private fun OnboardingPageContent(page: OnboardingPage) {
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(page.gradientEnd, DarkBackground),
-                    startY = 0f, endY = 900f
+                    colors = listOf(page.gradientStart, page.gradientEnd),
+                    startY = 0f, endY = 1200f
                 )
             ),
         contentAlignment = Alignment.Center
@@ -471,6 +481,12 @@ private fun OnboardingPageContent(page: OnboardingPage) {
                 modifier = Modifier
                     .size(120.dp)
                     .scale(scale)
+                    .shadow(
+                        elevation = 12.dp,
+                        shape = RoundedCornerShape(32.dp),
+                        ambientColor = page.accentColor.copy(alpha = 0.15f),
+                        spotColor = page.accentColor.copy(alpha = 0.2f)
+                    )
                     .clip(RoundedCornerShape(32.dp))
                     .background(page.iconBackground),
                 contentAlignment = Alignment.Center
@@ -491,14 +507,14 @@ private fun OnboardingPageContent(page: OnboardingPage) {
                     text = page.title,
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.ExtraBold,
-                    color = TextPrimary,
+                    color = TextPrimaryLight,
                     textAlign = TextAlign.Center,
                     lineHeight = 34.sp
                 )
                 Text(
                     text = page.subtitle,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = TextSecondary,
+                    color = TextSecondaryLight,
                     textAlign = TextAlign.Center,
                     lineHeight = 26.sp
                 )
@@ -533,8 +549,8 @@ private fun SchedulePageContent(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color(0xFF1A1230), DarkBackground),
-                    startY = 0f, endY = 900f
+                    colors = listOf(Color(0xFFFFF3EE), LightBackground),
+                    startY = 0f, endY = 1200f
                 )
             ),
         contentAlignment = Alignment.Center
@@ -550,14 +566,20 @@ private fun SchedulePageContent(
             Box(
                 modifier = Modifier
                     .size(96.dp)
+                    .shadow(
+                        elevation = 10.dp,
+                        shape = RoundedCornerShape(28.dp),
+                        ambientColor = PrimaryTerracotta.copy(alpha = 0.15f),
+                        spotColor = PrimaryTerracotta.copy(alpha = 0.2f)
+                    )
                     .clip(RoundedCornerShape(28.dp))
-                    .background(Color(0xFF2A1E4A)),
+                    .background(Color(0xFFFFEDE7)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Rounded.AccessTime,
                     contentDescription = null,
-                    tint = PrimaryPurple,
+                    tint = PrimaryTerracotta,
                     modifier = Modifier.size(48.dp)
                 )
             }
@@ -570,14 +592,14 @@ private fun SchedulePageContent(
                     text = "When Should We\nRemind You?",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.ExtraBold,
-                    color = TextPrimary,
+                    color = TextPrimaryLight,
                     textAlign = TextAlign.Center,
                     lineHeight = 34.sp
                 )
                 Text(
                     text = "Pick the times you want your daily wordzips. You can always change these in Settings.",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = TextSecondary,
+                    color = TextSecondaryLight,
                     textAlign = TextAlign.Center,
                     lineHeight = 24.sp
                 )
@@ -592,6 +614,7 @@ private fun SchedulePageContent(
                     selectedTimes.forEach { time ->
                         TimeChip(
                             time = time,
+                            accentColor = PrimaryTerracotta,
                             canRemove = selectedTimes.size > 1,
                             onRemove = { onRemoveTime(time) }
                         )
@@ -601,7 +624,7 @@ private fun SchedulePageContent(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(20.dp))
-                                .background(PrimaryPurple.copy(alpha = 0.18f))
+                                .background(PrimaryTerracotta.copy(alpha = 0.10f))
                                 .clickable { showTimePicker = true }
                                 .padding(horizontal = 14.dp, vertical = 10.dp),
                             contentAlignment = Alignment.Center
@@ -613,12 +636,12 @@ private fun SchedulePageContent(
                                 Icon(
                                     imageVector = Icons.Rounded.Add,
                                     contentDescription = "Add time",
-                                    tint = PrimaryPurple,
+                                    tint = PrimaryTerracotta,
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Text(
                                     text = "Add time",
-                                    color = PrimaryPurple,
+                                    color = PrimaryTerracotta,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp
                                 )
@@ -631,7 +654,7 @@ private fun SchedulePageContent(
             Text(
                 text = "${selectedTimes.size} reminder${if (selectedTimes.size != 1) "s" else ""} per day",
                 style = MaterialTheme.typography.labelMedium,
-                color = PrimaryPurple,
+                color = PrimaryTerracotta,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -641,24 +664,24 @@ private fun SchedulePageContent(
         val timePickerState = rememberTimePickerState(initialHour = 8, initialMinute = 0, is24Hour = true)
         AlertDialog(
             onDismissRequest = { showTimePicker = false },
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            title = { Text("Add Reminder Time", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold) },
+            containerColor = LightSurface,
+            title = { Text("Add Reminder Time", color = TextPrimaryLight, fontWeight = FontWeight.Bold) },
             text = {
                 Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     TimePicker(
                         state = timePickerState,
                         colors = TimePickerDefaults.colors(
-                            selectorColor = MaterialTheme.colorScheme.primary,
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                            periodSelectorBorderColor = MaterialTheme.colorScheme.primary,
-                            periodSelectorSelectedContainerColor = MaterialTheme.colorScheme.primary,
-                            periodSelectorUnselectedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            periodSelectorSelectedContentColor = MaterialTheme.colorScheme.onPrimary,
-                            periodSelectorUnselectedContentColor = MaterialTheme.colorScheme.onSurface,
-                            timeSelectorSelectedContainerColor = MaterialTheme.colorScheme.primary,
-                            timeSelectorUnselectedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            timeSelectorSelectedContentColor = MaterialTheme.colorScheme.onPrimary,
-                            timeSelectorUnselectedContentColor = MaterialTheme.colorScheme.onSurface
+                            selectorColor = PrimaryTerracotta,
+                            containerColor = LightSurfaceContainer,
+                            periodSelectorBorderColor = PrimaryTerracotta,
+                            periodSelectorSelectedContainerColor = PrimaryTerracotta,
+                            periodSelectorUnselectedContainerColor = LightSurfaceHigh,
+                            periodSelectorSelectedContentColor = Color.White,
+                            periodSelectorUnselectedContentColor = TextPrimaryLight,
+                            timeSelectorSelectedContainerColor = PrimaryTerracotta,
+                            timeSelectorUnselectedContainerColor = LightSurfaceHigh,
+                            timeSelectorSelectedContentColor = Color.White,
+                            timeSelectorUnselectedContentColor = TextPrimaryLight
                         )
                     )
                 }
@@ -671,14 +694,14 @@ private fun SchedulePageContent(
                         showTimePicker = false
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
+                        containerColor = PrimaryTerracotta,
+                        contentColor = Color.White
                     )
-                ) { Text("Add", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold) }
+                ) { Text("Add", fontWeight = FontWeight.Bold) }
             },
             dismissButton = {
                 TextButton(onClick = { showTimePicker = false }) {
-                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Cancel", color = TextSecondaryLight)
                 }
             }
         )
@@ -690,11 +713,11 @@ private fun SchedulePageContent(
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun TimeChip(time: String, canRemove: Boolean, onRemove: () -> Unit) {
+private fun TimeChip(time: String, accentColor: Color, canRemove: Boolean, onRemove: () -> Unit) {
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(DarkSurfaceHigh)
+            .background(LightSurface)
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -702,15 +725,15 @@ private fun TimeChip(time: String, canRemove: Boolean, onRemove: () -> Unit) {
         Icon(
             imageVector = Icons.Rounded.AccessTime,
             contentDescription = null,
-            tint = PrimaryContainerPurple,
+            tint = accentColor,
             modifier = Modifier.size(14.dp)
         )
-        Text(text = time, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Text(text = time, color = TextPrimaryLight, fontWeight = FontWeight.Bold, fontSize = 14.sp)
         if (canRemove) {
             Icon(
                 imageVector = Icons.Rounded.Close,
                 contentDescription = "Remove $time",
-                tint = TextSecondary,
+                tint = OutlineColorLight,
                 modifier = Modifier.size(14.dp).clickable { onRemove() }
             )
         }
@@ -735,7 +758,7 @@ private fun PageIndicator(pageCount: Int, currentPage: Int, accentColor: Color) 
                 label = "dot_width"
             )
             val dotColor by animateColorAsState(
-                targetValue = if (isSelected) accentColor else DarkSurfaceContainer,
+                targetValue = if (isSelected) accentColor else LightSurfaceHigh,
                 animationSpec = tween(300),
                 label = "dot_color"
             )

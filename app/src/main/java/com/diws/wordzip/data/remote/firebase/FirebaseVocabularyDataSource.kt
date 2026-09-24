@@ -1,11 +1,14 @@
 package com.diws.wordzip.data.remote.firebase
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.util.Log
 import com.google.firebase.FirebaseApp
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -23,28 +26,47 @@ class FirebaseVocabularyDataSource @Inject constructor(
     }
 
     override suspend fun getChangedWordsSince(lastSyncedAt: Long): List<FirebaseWordDto> {
+        if (!isFirebaseAvailable()) {
+            Log.w(TAG, "Firebase is not available on this device/app")
+            return emptyList()
+        }
+
+        val isOnline = isNetworkAvailable()
+        Log.d(TAG, "Fetching '$COLLECTION_WORDS' — online=$isOnline, lastSyncedAt=$lastSyncedAt")
+
+        if (!isOnline) {
+            Log.w(TAG, "Cannot sync vocabulary: No internet connection")
+            throw java.io.IOException("No internet connection")
+        }
+
+        val db = firestore ?: FirebaseFirestore.getInstance()
+
         return try {
-            if (!isFirebaseAvailable()) {
-                Log.w(TAG, "Firebase is not available on this device/app")
-                return emptyList()
-            }
-            val db = firestore ?: FirebaseFirestore.getInstance()
-
-            Log.d(TAG, "Fetching words from Firestore collection '$COLLECTION_WORDS' (lastSyncedAt = $lastSyncedAt)...")
-
-            val querySnapshot = if (lastSyncedAt > 0) {
-                try {
-                    db.collection(COLLECTION_WORDS)
-                        .whereGreaterThan("updatedAt", lastSyncedAt)
-                        .get()
-                        .await()
-                } catch (e: Exception) {
-                    Log.w(TAG, "Query with lastSyncedAt on '$COLLECTION_WORDS' failed: ${e.message}")
-                    db.collection(COLLECTION_WORDS).get().await()
+            val querySnapshot = try {
+                if (lastSyncedAt > 0) {
+                    try {
+                        db.collection(COLLECTION_WORDS)
+                            .whereGreaterThan("updatedAt", lastSyncedAt)
+                            .get(Source.SERVER)
+                            .await()
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Filtered query failed (${e.message}), falling back to full fetch")
+                        db.collection(COLLECTION_WORDS).get(Source.SERVER).await()
+                    }
+                } else {
+                    db.collection(COLLECTION_WORDS).get(Source.SERVER).await()
                 }
-            } else {
-                db.collection(COLLECTION_WORDS).get().await()
+            } catch (e: Exception) {
+                Log.w(TAG, "Server fetch failed (${e.message}). Falling back to local cache.")
+                try {
+                    db.collection(COLLECTION_WORDS).get(Source.CACHE).await()
+                } catch (cacheEx: Exception) {
+                    Log.e(TAG, "Cache fetch also failed: ${cacheEx.message}")
+                    throw java.io.IOException("Unable to connect to vocabulary server: ${e.message}", e)
+                }
             }
+
+            Log.d(TAG, "Firestore returned ${querySnapshot.documents.size} raw documents")
 
             val dtos = querySnapshot.documents.mapNotNull { doc ->
                 parseDocument(doc)
@@ -52,9 +74,24 @@ class FirebaseVocabularyDataSource @Inject constructor(
 
             Log.d(TAG, "Parsed ${dtos.size} FirebaseWordDto objects from '$COLLECTION_WORDS'")
             dtos
+        } catch (e: java.io.IOException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Error fetching words from Firestore", e)
-            emptyList()
+            throw java.io.IOException(e.message ?: "Failed to fetch words from remote", e)
+        }
+    }
+
+    private fun isNetworkAvailable(): Boolean {
+        return try {
+            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+                ?: return false
+            val network = cm.activeNetwork ?: return false
+            val caps = cm.getNetworkCapabilities(network) ?: return false
+            caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        } catch (e: Exception) {
+            false
         }
     }
 

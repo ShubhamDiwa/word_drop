@@ -76,14 +76,6 @@ private data class ContactLink(
 
 private val contactLinks = listOf(
     ContactLink(
-        label = "Instagram",
-        handle = "@shubhammam_",
-        url = "https://www.instagram.com/shubhammam_?stkn=MXd4eDN5a3Izd3NkZA==",
-        iconRes = R.drawable.ic_instagram,   // see note below
-        containerColor = Color(0xFF3A1A2E),
-        iconTint = Color(0xFFE1306C)
-    ),
-    ContactLink(
         label = "LinkedIn",
         handle = "Shubham Diwakar",
         url = "https://www.linkedin.com/in/shubham-android-developer",

@@ -166,14 +166,28 @@ class WordRepositoryImpl(
             val remoteDataSource = vocabularyRemoteDataSource ?: return Result.success(0)
             val changedDtos = remoteDataSource.getChangedWordsSince(0L) // ALWAYS FULL SYNC FOR NOW
 
+            Log.d("FirebaseSync", "=== SYNC START ===")
+            Log.d("FirebaseSync", "Total documents from Firestore: ${changedDtos.size}")
+
             if (changedDtos.isEmpty()) {
-                Log.d("FirebaseSync", "No changed words found on Firebase")
+                Log.w("FirebaseSync", "No words returned from Firebase — check Firestore collection name and rules")
                 return Result.success(0)
             }
 
             val validDtos = changedDtos.filter { it.isValid() }
+            val invalidDtos = changedDtos.filter { !it.isValid() }
             val activeDtos = validDtos.filter { it.active }
             val inactiveIds = validDtos.filter { !it.active }.map { it.id }
+
+            Log.d("FirebaseSync", "Valid DTOs (id+word+definition not blank): ${validDtos.size}")
+            Log.d("FirebaseSync", "Invalid/dropped DTOs: ${invalidDtos.size}")
+            if (invalidDtos.isNotEmpty()) {
+                invalidDtos.take(10).forEach { dto ->
+                    Log.w("FirebaseSync", "  INVALID: id='${dto.id}' word='${dto.word}' definition='${dto.definition.take(30)}'")
+                }
+            }
+            Log.d("FirebaseSync", "Active DTOs to insert: ${activeDtos.size}")
+            Log.d("FirebaseSync", "Inactive DTOs to delete: ${inactiveIds.size}")
 
             if (activeDtos.isNotEmpty()) {
                 val entitiesToInsert = activeDtos.map { dto ->
@@ -181,19 +195,24 @@ class WordRepositoryImpl(
                     dto.toEntity(existingEntity)
                 }
                 wordDao.insertWords(entitiesToInsert)
+                Log.d("FirebaseSync", "Inserted/updated ${entitiesToInsert.size} words into Room")
             }
 
             if (inactiveIds.isNotEmpty()) {
                 wordDao.deleteWordsByIds(inactiveIds)
+                Log.d("FirebaseSync", "Deleted ${inactiveIds.size} inactive words from Room")
             }
+
+            val totalInRoom = wordDao.getCount()
+            Log.d("FirebaseSync", "Room now has $totalInRoom total words")
+            Log.d("FirebaseSync", "=== SYNC END ===")
 
             val maxUpdatedAt = validDtos.maxOfOrNull { it.updatedAt } ?: 0L
             if (maxUpdatedAt > 0) {
                 userPreferencesRepository?.updateLastVocabularySyncTimestamp(maxUpdatedAt)
             }
 
-            Log.d("FirebaseSync", "Successfully synced ${validDtos.size} words from Firebase into Room")
-            Result.success(validDtos.size)
+            Result.success(activeDtos.size)
         } catch (e: Exception) {
             Log.e("FirebaseSync", "Failed to sync vocabulary with Firebase", e)
             Result.failure(e)

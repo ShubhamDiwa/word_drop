@@ -167,7 +167,10 @@ class VocabularyNotificationManager @Inject constructor(
             .setContentText(word.simpleMeaning ?: word.definition)
             .setCustomContentView(collapsedLayout)
             .setCustomBigContentView(expandedLayout)
-            .setStyle(NotificationCompat.DecoratedCustomViewStyle())
+            .setCustomHeadsUpContentView(collapsedLayout)   // lock-screen peek = compact view
+            // No DecoratedCustomViewStyle — it adds ~48dp system header chrome on top of our
+            // custom views, which already have their own branded header. Removing it gives the
+            // custom layouts the full 256dp Android notification height budget.
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
             .setVisibility(lockVisibility)

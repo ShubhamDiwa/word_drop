@@ -258,13 +258,42 @@ fun OnboardingScreen(onFinished: (notificationTimes: List<String>) -> Unit) {
             }
         }
 
-        // Skip button
-        if (!isLastPage && !celebrationActive) {
-            TextButton(
-                onClick = { onFinished(selectedTimes.toList()) },
-                modifier = Modifier.align(Alignment.TopEnd).padding(top = 48.dp, end = 16.dp)
+        // Top bar with company branding and skip button
+        if (!celebrationActive) {
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .padding(top = 48.dp, start = 24.dp, end = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Skip", color = TextSecondaryLight, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "from",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextSecondaryLight.copy(alpha = 0.6f),
+                        letterSpacing = 0.5.sp
+                    )
+                    Text(
+                        text = "MONOCHROME LABS",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 1.2.sp,
+                        color = currentAccent
+                    )
+                }
+
+                if (!isLastPage) {
+                    TextButton(
+                        onClick = { onFinished(selectedTimes.toList()) }
+                    ) {
+                        Text("Skip", color = TextSecondaryLight, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                    }
+                }
             }
         }
 

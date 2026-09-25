@@ -22,6 +22,8 @@ import com.diws.wordzip.navigation.Screen
 import com.diws.wordzip.notification.VocabularyNotificationManager
 import com.diws.wordzip.ui.theme.WordZipTheme
 import com.diws.wordzip.util.HapticFeedbackHelper
+import com.diws.wordzip.util.InAppUpdateHelper
+import com.google.android.play.core.install.model.AppUpdateType
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -33,6 +35,7 @@ class MainActivity : ComponentActivity() {
 
     private var pendingWordId by mutableStateOf<String?>(null)
     private lateinit var gestureDetector: GestureDetector
+    private lateinit var inAppUpdateHelper: InAppUpdateHelper
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -43,6 +46,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        inAppUpdateHelper = InAppUpdateHelper(this)
+        inAppUpdateHelper.checkForUpdate(updateType = AppUpdateType.IMMEDIATE)
 
         window.decorView.isHapticFeedbackEnabled = true
 
@@ -91,6 +97,20 @@ class MainActivity : ComponentActivity() {
         val wordId = extractWordIdFromIntent(intent)
         if (wordId != null) {
             pendingWordId = wordId
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::inAppUpdateHelper.isInitialized) {
+            inAppUpdateHelper.onResume(updateType = AppUpdateType.IMMEDIATE)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (::inAppUpdateHelper.isInitialized) {
+            inAppUpdateHelper.onDestroy()
         }
     }
 

@@ -15,8 +15,8 @@ android {
         applicationId = "com.diws.wordzip"
         minSdk = 24
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.0.2"
+        versionCode = 5
+        versionName = "1.0.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -103,6 +103,9 @@ dependencies {
 
     // AdMob
     implementation(libs.play.services.ads)
+
+    // Google Play In-App Updates
+    implementation(libs.play.app.update)
 
     testImplementation(libs.junit)
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")

@@ -20,6 +20,7 @@ composeBom = "2024.10.01"
 firebaseBom = "33.7.0"
 googleServices = "4.4.2"
 playServicesAds = "23.6.0"
+playAppUpdate = "2.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -69,6 +70,9 @@ firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore
 
 # Play Services Ads (AdMob)
 play-services-ads = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "playServicesAds" }
+
+# Google Play In-App Updates
+play-app-update = { group = "com.google.android.play", name = "app-update-ktx", version.ref = "playAppUpdate" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -75,4 +75,32 @@ interface WordDao {
 
     @Query("UPDATE words SET timesShown = timesShown + 1, lastShownAt = :timestamp WHERE id = :id")
     suspend fun updateWordShownStats(id: String, timestamp: Long)
+
+    // ── Word Translations (Meaning Languages) ───────────────────────────
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertTranslations(translations: List<WordTranslationEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertTranslation(translation: WordTranslationEntity)
+
+    @Query("SELECT * FROM word_translations WHERE wordId = :wordId")
+    fun getTranslationsForWord(wordId: String): Flow<List<WordTranslationEntity>>
+
+    @Query("SELECT * FROM word_translations WHERE wordId = :wordId")
+    suspend fun getTranslationsForWordSync(wordId: String): List<WordTranslationEntity>
+
+    @Query("SELECT * FROM word_translations")
+    fun getAllTranslations(): Flow<List<WordTranslationEntity>>
+
+    @Query("SELECT * FROM word_translations")
+    suspend fun getAllTranslationsSync(): List<WordTranslationEntity>
+
+    @Query("SELECT * FROM word_translations WHERE wordId IN (:wordIds)")
+    suspend fun getTranslationsForWords(wordIds: List<String>): List<WordTranslationEntity>
+
+    @Query("DELETE FROM word_translations WHERE wordId = :wordId")
+    suspend fun deleteTranslationsForWord(wordId: String)
+
+    @Query("DELETE FROM word_translations WHERE wordId IN (:wordIds)")
+    suspend fun deleteTranslationsForWords(wordIds: List<String>)
 }

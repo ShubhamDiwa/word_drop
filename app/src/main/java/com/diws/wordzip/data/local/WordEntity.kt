@@ -23,7 +23,7 @@ data class WordEntity(
     val timesShown: Int = 0,
     val lastShownAt: Long? = null
 ) {
-    fun toDomainModel(): Word {
+    fun toDomainModel(translations: Map<String, String> = emptyMap()): Word {
         return Word(
             id = id,
             word = word,
@@ -38,7 +38,8 @@ data class WordEntity(
             audioUrl = audioUrl,
             isLearned = isLearned,
             timesShown = timesShown,
-            lastShownAt = lastShownAt
+            lastShownAt = lastShownAt,
+            translations = translations
         )
     }
 

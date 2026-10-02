@@ -2,6 +2,7 @@ package com.diws.wordzip.ui.vocabulary
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.diws.wordzip.data.preferences.UserPreferencesRepository
 import com.diws.wordzip.domain.model.Word
 import com.diws.wordzip.domain.model.WordDifficulty
 import com.diws.wordzip.domain.repository.WordRepository
@@ -29,6 +30,7 @@ data class VocabularyUiState(
     val selectedDifficulty: WordDifficulty? = null,
     val selectedLearnedFilter: LearnedFilter = LearnedFilter.ALL,
     val words: List<Word> = emptyList(),
+    val selectedMeaningLanguages: List<String> = emptyList(),
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val isOffline: Boolean = false,
@@ -40,7 +42,8 @@ data class VocabularyUiState(
 class VocabularyViewModel @Inject constructor(
     private val getVocabularyUseCase: GetVocabularyUseCase,
     private val wordRepository: WordRepository,
-    private val networkMonitor: NetworkMonitor
+    private val networkMonitor: NetworkMonitor,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -85,8 +88,9 @@ class VocabularyViewModel @Inject constructor(
         ) { isRefreshing, isOffline, errorMessage ->
             StatusTuple(isRefreshing, isOffline, errorMessage)
         },
-        getVocabularyUseCase()
-    ) { filters, status, allWords ->
+        getVocabularyUseCase(),
+        userPreferencesRepository.selectedMeaningLanguagesFlow
+    ) { filters, status, allWords, selectedLanguages ->
         val filtered = allWords.filter { word ->
             val matchesQuery = filters.debouncedQuery.isBlank() ||
                     word.word.contains(filters.debouncedQuery, ignoreCase = true) ||
@@ -108,6 +112,7 @@ class VocabularyViewModel @Inject constructor(
             selectedDifficulty = filters.difficulty,
             selectedLearnedFilter = filters.learnedFilter,
             words = filtered,
+            selectedMeaningLanguages = selectedLanguages,
             isLoading = false,
             isRefreshing = status.isRefreshing,
             isOffline = status.isOffline,
@@ -124,21 +129,17 @@ class VocabularyViewModel @Inject constructor(
 
     fun refreshVocabularyFromFirebase() {
         viewModelScope.launch {
-            if (!networkMonitor.isCurrentlyConnected()) {
-                _isOffline.value = true
-                _errorMessage.value = "No internet connection. Please check your network and try again."
-                return@launch
-            }
             _isRefreshing.value = true
-            _isOffline.value = false
+            _isOffline.value = !networkMonitor.isCurrentlyConnected()
             _errorMessage.value = null
 
             val result = wordRepository.syncVocabularyWithRemote()
             result.onFailure { error ->
-                _errorMessage.value = if (!networkMonitor.isCurrentlyConnected()) {
-                    "No internet connection. Showing offline vocabulary."
+                if (!networkMonitor.isCurrentlyConnected()) {
+                    _isOffline.value = true
+                    _errorMessage.value = "No internet connection. Showing offline vocabulary."
                 } else {
-                    error.localizedMessage ?: "Failed to sync vocabulary. Please try again."
+                    _errorMessage.value = error.localizedMessage ?: "Failed to sync vocabulary. Please try again."
                 }
             }
             _isRefreshing.value = false

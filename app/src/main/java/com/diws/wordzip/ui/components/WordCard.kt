@@ -1,6 +1,5 @@
 package com.diws.wordzip.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,15 +22,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.diws.wordzip.domain.model.Word
-
 
 @Composable
 fun WordCard(
     word: Word,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    selectedMeaningLanguages: List<String> = emptyList()
 ) {
     Card(
         modifier = modifier
@@ -83,7 +81,17 @@ fun WordCard(
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                val description = if (!word.simpleMeaning.isNullOrBlank()) word.simpleMeaning else word.definition
+                val description = if (selectedMeaningLanguages.isNotEmpty()) {
+                    val resolved = word.resolveMeanings(selectedMeaningLanguages)
+                    if (resolved.size == 1) {
+                        resolved.first().meaning
+                    } else {
+                        resolved.joinToString(" • ") { "${it.languageName}: ${it.meaning}" }
+                    }
+                } else {
+                    if (!word.simpleMeaning.isNullOrBlank()) word.simpleMeaning else word.definition
+                }
+
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodyMedium,

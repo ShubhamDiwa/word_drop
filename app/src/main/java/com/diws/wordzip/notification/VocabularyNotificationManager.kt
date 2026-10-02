@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
 import android.view.View
@@ -13,12 +14,11 @@ import androidx.core.app.NotificationCompat
 import com.diws.wordzip.MainActivity
 import com.diws.wordzip.R
 import com.diws.wordzip.data.local.WordDao
+import com.diws.wordzip.data.preferences.UserPreferencesRepository
 import com.diws.wordzip.domain.model.Word
 import com.diws.wordzip.domain.model.WordDifficulty
-import android.content.res.Configuration
-import com.diws.wordzip.data.preferences.UserPreferencesRepository
-import kotlinx.coroutines.flow.first
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -82,6 +82,7 @@ class VocabularyNotificationManager @Inject constructor(
             null
         }
 
+        val selectedLanguages = settings?.selectedMeaningLanguages ?: emptyList()
         val isDark = when (settings?.appTheme) {
             "LIGHT" -> false
             "DARK" -> true
@@ -91,10 +92,28 @@ class VocabularyNotificationManager @Inject constructor(
         val collapsedRes = if (isDark) R.layout.notification_word_collapsed else R.layout.notification_word_collapsed_light
         val expandedRes = if (isDark) R.layout.notification_word_expanded else R.layout.notification_word_expanded_light
 
+        // Meaning resolution according to selected Meaning Language(s)
+        val resolvedMeanings = word.resolveMeanings(selectedLanguages)
+        val collapsedMeaningText = if (selectedLanguages.isEmpty()) {
+            word.simpleMeaning ?: word.definition
+        } else if (resolvedMeanings.size == 1) {
+            resolvedMeanings.first().meaning
+        } else {
+            resolvedMeanings.joinToString(" • ") { "${it.languageName}: ${it.meaning}" }
+        }
+
+        val expandedMeaningText = if (selectedLanguages.isEmpty()) {
+            word.definition
+        } else if (resolvedMeanings.size == 1) {
+            resolvedMeanings.first().meaning
+        } else {
+            resolvedMeanings.joinToString("\n") { "${it.languageName}: ${it.meaning}" }
+        }
+
         // Collapsed Custom Layout
         val collapsedLayout = RemoteViews(context.packageName, collapsedRes).apply {
             setTextViewText(R.id.notification_word_title, word.word.uppercase())
-            setTextViewText(R.id.notification_word_meaning, word.simpleMeaning ?: word.definition)
+            setTextViewText(R.id.notification_word_meaning, collapsedMeaningText)
             setTextViewText(R.id.notification_difficulty_chip, word.difficulty.name)
 
             if (!isDark) {
@@ -111,7 +130,7 @@ class VocabularyNotificationManager @Inject constructor(
         // Expanded Custom Layout
         val expandedLayout = RemoteViews(context.packageName, expandedRes).apply {
             setTextViewText(R.id.notification_word_title, word.word.uppercase())
-            
+
             // Difficulty badge background & text color
             val (badgeRes, textColor) = if (isDark) {
                 when (word.difficulty) {
@@ -137,7 +156,7 @@ class VocabularyNotificationManager @Inject constructor(
                 setViewVisibility(R.id.notification_pronunciation, View.GONE)
             }
 
-            setTextViewText(R.id.notification_definition, word.definition)
+            setTextViewText(R.id.notification_definition, expandedMeaningText)
 
             if (!word.example.isNull_or_empty()) {
                 setTextViewText(R.id.notification_example, "\"${word.example}\"")
@@ -145,14 +164,6 @@ class VocabularyNotificationManager @Inject constructor(
             } else {
                 setViewVisibility(R.id.notification_example, View.GONE)
             }
-
-            // Fetch user streak & completion dots suspendly without blocking
-            val learnedCount = try {
-                wordDao.getLearnedCountSync()
-            } catch (_: Exception) {
-                0
-            }
-            val streak = if (learnedCount > 0) learnedCount.coerceAtMost(30) else 1
         }
 
         val lockVisibility = if (settings?.showOnLockScreen != false) {
@@ -164,13 +175,10 @@ class VocabularyNotificationManager @Inject constructor(
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Wordzip • ${word.word.uppercase()}")
-            .setContentText(word.simpleMeaning ?: word.definition)
+            .setContentText(collapsedMeaningText)
             .setCustomContentView(collapsedLayout)
             .setCustomBigContentView(expandedLayout)
-            .setCustomHeadsUpContentView(collapsedLayout)   // lock-screen peek = compact view
-            // No DecoratedCustomViewStyle — it adds ~48dp system header chrome on top of our
-            // custom views, which already have their own branded header. Removing it gives the
-            // custom layouts the full 256dp Android notification height budget.
+            .setCustomHeadsUpContentView(collapsedLayout)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
             .setVisibility(lockVisibility)

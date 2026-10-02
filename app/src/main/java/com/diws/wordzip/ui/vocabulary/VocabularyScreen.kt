@@ -453,7 +453,8 @@ fun VocabularyScreen(
                             items(state.words, key = { it.id }) { word ->
                                 WordCard(
                                     word = word,
-                                    onClick = { onNavigateToDetail(word.id) }
+                                    onClick = { onNavigateToDetail(word.id) },
+                                    selectedMeaningLanguages = state.selectedMeaningLanguages
                                 )
                             }
                         }

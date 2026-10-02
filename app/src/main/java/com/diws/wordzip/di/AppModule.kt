@@ -36,7 +36,7 @@ object AppModule {
             WordDatabase::class.java,
             WordDatabase.DATABASE_NAME
         )
-            .addMigrations(WordDatabase.MIGRATION_1_2)
+            .addMigrations(WordDatabase.MIGRATION_1_2, WordDatabase.MIGRATION_2_3)
             .fallbackToDestructiveMigration()
             .build()
     }
@@ -75,9 +75,10 @@ object AppModule {
     @Singleton
     fun provideFirebaseFirestore(@ApplicationContext context: Context): FirebaseFirestore? {
         return try {
-            if (FirebaseApp.getApps(context).isNotEmpty()) {
-                FirebaseFirestore.getInstance()
-            } else null
+            if (FirebaseApp.getApps(context).isEmpty()) {
+                FirebaseApp.initializeApp(context)
+            }
+            FirebaseFirestore.getInstance()
         } catch (_: Exception) {
             null
         }
@@ -94,17 +95,27 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideTranslationDataSource(
+        okHttpClient: OkHttpClient
+    ): com.diws.wordzip.data.remote.translation.TranslationDataSource {
+        return com.diws.wordzip.data.remote.translation.BhashiniTranslationService(okHttpClient)
+    }
+
+    @Provides
+    @Singleton
     fun provideWordRepository(
         wordDao: WordDao,
         dictionaryApi: DictionaryApi,
         vocabularyRemoteDataSource: VocabularyRemoteDataSource,
-        userPreferencesRepository: UserPreferencesRepository
+        userPreferencesRepository: UserPreferencesRepository,
+        translationDataSource: com.diws.wordzip.data.remote.translation.TranslationDataSource
     ): WordRepository {
         return WordRepositoryImpl(
             wordDao = wordDao,
             dictionaryApi = dictionaryApi,
             vocabularyRemoteDataSource = vocabularyRemoteDataSource,
-            userPreferencesRepository = userPreferencesRepository
+            userPreferencesRepository = userPreferencesRepository,
+            translationDataSource = translationDataSource
         )
     }
 

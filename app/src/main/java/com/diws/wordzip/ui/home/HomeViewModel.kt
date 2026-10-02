@@ -25,6 +25,7 @@ data class HomeUiState(
     val levelInfo: UserLevelInfo = XpLevelManager.getLevelInfo(0),
     val learnedToday: Int = 3,
     val totalTodayTarget: Int = 5,
+    val selectedMeaningLanguages: List<String> = emptyList(),
     val error: String? = null
 )
 
@@ -36,22 +37,25 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     val uiState: StateFlow<HomeUiState> = combine(
-        wordRepository.getWordOfTheDay(),
-        wordRepository.getHomeWords(),   // lean: max 20 rows, unlearned-first
-        getProgressUseCase(),
+        combine(
+            wordRepository.getWordOfTheDay(),
+            wordRepository.getHomeWords(),
+            getProgressUseCase()
+        ) { wordOfTheDay, allWords, progress ->
+            Triple(wordOfTheDay, allWords, progress)
+        },
         userPreferencesRepository.userXpFlow,
-        userPreferencesRepository.streakShieldsFlow
-    ) { wordOfTheDay, allWords, progress, userXp, streakShields ->
-        
-        // Show up to 10 words on the Home Screen for daily learning
-        // Only show unlearned words for the daily target if possible
+        userPreferencesRepository.streakShieldsFlow,
+        userPreferencesRepository.selectedMeaningLanguagesFlow
+    ) { (wordOfTheDay, allWords, progress), userXp, streakShields, selectedLanguages ->
+
         val unlearnedWords = allWords.filter { !it.isLearned }
         val todaysList = if (unlearnedWords.size >= 10) {
             unlearnedWords.take(10)
         } else {
             (unlearnedWords + allWords.filter { it.isLearned }).take(10).distinctBy { it.id }
         }
-        
+
         val learnedCount = todaysList.count { it.isLearned }
         HomeUiState(
             isLoading = false,
@@ -61,7 +65,8 @@ class HomeViewModel @Inject constructor(
             streakShields = streakShields,
             levelInfo = XpLevelManager.getLevelInfo(userXp),
             learnedToday = learnedCount,
-            totalTodayTarget = todaysList.size.coerceAtLeast(1)
+            totalTodayTarget = todaysList.size.coerceAtLeast(1),
+            selectedMeaningLanguages = selectedLanguages
         )
     }.stateIn(
         scope = viewModelScope,

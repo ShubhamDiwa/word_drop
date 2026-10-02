@@ -21,7 +21,8 @@ data class UserSettings(
     val includeReviewWords: Boolean = true,
     val showOnLockScreen: Boolean = true,
     val notificationTimes: List<String> = listOf("08:00", "12:00", "16:00", "20:00"),
-    val appTheme: String = "LIGHT"
+    val appTheme: String = "LIGHT",
+    val selectedMeaningLanguages: List<String> = emptyList()
 )
 
 class UserPreferencesRepository(private val context: Context) {
@@ -44,12 +45,20 @@ class UserPreferencesRepository(private val context: Context) {
         val HAS_SEEN_ONBOARDING = booleanPreferencesKey("has_seen_onboarding")
         val USER_XP = intPreferencesKey("user_xp")
         val STREAK_SHIELDS = intPreferencesKey("streak_shields")
+        val SELECTED_MEANING_LANGUAGES = stringPreferencesKey("selected_meaning_languages")
     }
 
     val userSettingsFlow: Flow<UserSettings> = context.dataStore.data.map { preferences ->
         val timesString = preferences[PreferencesKeys.NOTIFICATION_TIMES] ?: "08:00,12:00,16:00,20:00"
         val cached = themePrefs.getString("app_theme", "LIGHT") ?: "LIGHT"
         val theme = preferences[PreferencesKeys.APP_THEME] ?: cached
+        val langString = preferences[PreferencesKeys.SELECTED_MEANING_LANGUAGES] ?: ""
+        val selectedLanguages = if (langString.isBlank()) {
+            emptyList()
+        } else {
+            langString.split(",").map { it.trim().lowercase() }.filter { it.isNotBlank() }
+        }
+
         UserSettings(
             notificationsEnabled = preferences[PreferencesKeys.NOTIFICATIONS_ENABLED] ?: true,
             wordsPerDay = preferences[PreferencesKeys.WORDS_PER_DAY] ?: 5,
@@ -57,8 +66,46 @@ class UserPreferencesRepository(private val context: Context) {
             includeReviewWords = preferences[PreferencesKeys.INCLUDE_REVIEW_WORDS] ?: true,
             showOnLockScreen = preferences[PreferencesKeys.SHOW_ON_LOCK_SCREEN] ?: true,
             notificationTimes = timesString.split(",").filter { it.isNotBlank() },
-            appTheme = theme
+            appTheme = theme,
+            selectedMeaningLanguages = selectedLanguages
         )
+    }
+
+    val selectedMeaningLanguagesFlow: Flow<List<String>> = context.dataStore.data.map { preferences ->
+        val langString = preferences[PreferencesKeys.SELECTED_MEANING_LANGUAGES] ?: ""
+        if (langString.isBlank()) {
+            emptyList()
+        } else {
+            langString.split(",").map { it.trim().lowercase() }.filter { it.isNotBlank() }
+        }
+    }
+
+    suspend fun updateSelectedMeaningLanguages(languages: List<String>) {
+        val singleLanguage = languages.firstOrNull { it.isNotBlank() }?.trim()?.lowercase() ?: ""
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.SELECTED_MEANING_LANGUAGES] = singleLanguage
+        }
+    }
+
+    suspend fun selectMeaningLanguage(languageCode: String?) {
+        val cleanCode = languageCode?.trim()?.lowercase()?.takeIf { it.isNotBlank() } ?: ""
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.SELECTED_MEANING_LANGUAGES] = cleanCode
+        }
+    }
+
+    suspend fun toggleMeaningLanguage(languageCode: String, isSelected: Boolean) {
+        val cleanCode = languageCode.trim().lowercase()
+        context.dataStore.edit { preferences ->
+            if (isSelected) {
+                preferences[PreferencesKeys.SELECTED_MEANING_LANGUAGES] = cleanCode
+            } else {
+                val current = preferences[PreferencesKeys.SELECTED_MEANING_LANGUAGES] ?: ""
+                if (current.equals(cleanCode, ignoreCase = true)) {
+                    preferences[PreferencesKeys.SELECTED_MEANING_LANGUAGES] = ""
+                }
+            }
+        }
     }
 
     suspend fun updateNotificationsEnabled(enabled: Boolean) {

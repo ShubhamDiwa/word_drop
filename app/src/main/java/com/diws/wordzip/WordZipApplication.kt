@@ -21,6 +21,15 @@ class WordZipApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         try {
+            if (com.google.firebase.FirebaseApp.getApps(this).isEmpty()) {
+                com.google.firebase.FirebaseApp.initializeApp(this)
+                Log.d("Firebase", "FirebaseApp initialized successfully in Application")
+            }
+        } catch (e: Exception) {
+            Log.e("Firebase", "Failed to initialize FirebaseApp", e)
+        }
+
+        try {
             // ✅ setRequestConfiguration MUST be called before initialize()
             val testConfig = RequestConfiguration.Builder()
                 .setTestDeviceIds(listOf(

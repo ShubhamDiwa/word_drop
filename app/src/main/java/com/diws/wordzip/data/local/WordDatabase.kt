@@ -6,8 +6,8 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [WordEntity::class, DailyWordEntity::class],
-    version = 2,
+    entities = [WordEntity::class, DailyWordEntity::class, WordTranslationEntity::class],
+    version = 3,
     exportSchema = false
 )
 abstract class WordDatabase : RoomDatabase() {
@@ -26,7 +26,7 @@ abstract class WordDatabase : RoomDatabase() {
                     WordDatabase::class.java,
                     DATABASE_NAME
                 )
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
@@ -41,6 +41,23 @@ abstract class WordDatabase : RoomDatabase() {
                 database.execSQL("INSERT INTO `words_new` (`id`,`word`,`pronunciation`,`partOfSpeech`,`definition`,`simpleMeaning`,`example`,`synonyms`,`difficulty`,`category`,`audioUrl`,`isLearned`,`timesShown`,`lastShownAt`) SELECT `id`,`word`,`pronunciation`,`partOfSpeech`,`definition`,`simpleMeaning`,`example`,`synonyms`,`difficulty`,`category`,`audioUrl`,`isLearned`,`timesShown`,`lastShownAt` FROM `words`")
                 database.execSQL("DROP TABLE `words`")
                 database.execSQL("ALTER TABLE `words_new` RENAME TO `words`")
+            }
+        }
+
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `word_translations` (" +
+                            "`wordId` TEXT NOT NULL, " +
+                            "`languageCode` TEXT NOT NULL, " +
+                            "`meaning` TEXT NOT NULL, " +
+                            "`example` TEXT, " +
+                            "PRIMARY KEY(`wordId`, `languageCode`), " +
+                            "FOREIGN KEY(`wordId`) REFERENCES `words`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE" +
+                            ")"
+                )
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_word_translations_wordId` ON `word_translations` (`wordId`)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_word_translations_languageCode` ON `word_translations` (`languageCode`)")
             }
         }
     }

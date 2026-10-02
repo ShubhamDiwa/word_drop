@@ -30,6 +30,24 @@ class SettingsViewModel @Inject constructor(
         initialValue = UserSettings()
     )
 
+    fun selectMeaningLanguage(languageCode: String?) {
+        viewModelScope.launch {
+            preferencesRepository.selectMeaningLanguage(languageCode)
+        }
+    }
+
+    fun toggleMeaningLanguage(languageCode: String, isSelected: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.toggleMeaningLanguage(languageCode, isSelected)
+        }
+    }
+
+    fun setMeaningLanguages(languages: List<String>) {
+        viewModelScope.launch {
+            preferencesRepository.updateSelectedMeaningLanguages(languages)
+        }
+    }
+
     fun setNotificationsEnabled(enabled: Boolean) {
         viewModelScope.launch {
             preferencesRepository.updateNotificationsEnabled(enabled)

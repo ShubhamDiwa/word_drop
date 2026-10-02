@@ -46,6 +46,21 @@ class WordRepositorySyncTest {
         override suspend fun updateWord(word: WordEntity) {}
         override suspend fun updateLearnedStatus(id: String, isLearned: Boolean) {}
         override suspend fun updateWordShownStats(id: String, timestamp: Long) {}
+
+        val insertedTranslations = mutableListOf<com.diws.wordzip.data.local.WordTranslationEntity>()
+        override suspend fun insertTranslations(translations: List<com.diws.wordzip.data.local.WordTranslationEntity>) {
+            insertedTranslations.addAll(translations)
+        }
+        override suspend fun insertTranslation(translation: com.diws.wordzip.data.local.WordTranslationEntity) {
+            insertedTranslations.add(translation)
+        }
+        override fun getTranslationsForWord(wordId: String): Flow<List<com.diws.wordzip.data.local.WordTranslationEntity>> = flowOf(emptyList())
+        override suspend fun getTranslationsForWordSync(wordId: String): List<com.diws.wordzip.data.local.WordTranslationEntity> = emptyList()
+        override fun getAllTranslations(): Flow<List<com.diws.wordzip.data.local.WordTranslationEntity>> = flowOf(emptyList())
+        override suspend fun getAllTranslationsSync(): List<com.diws.wordzip.data.local.WordTranslationEntity> = emptyList()
+        override suspend fun getTranslationsForWords(wordIds: List<String>): List<com.diws.wordzip.data.local.WordTranslationEntity> = emptyList()
+        override suspend fun deleteTranslationsForWord(wordId: String) {}
+        override suspend fun deleteTranslationsForWords(wordIds: List<String>) {}
     }
 
     private class FakeVocabularyRemoteDataSource(
@@ -90,7 +105,7 @@ class WordRepositorySyncTest {
         val result = repository.syncVocabularyWithRemote()
 
         assertTrue(result.isSuccess)
-        assertEquals(2, result.getOrNull())
+        assertEquals(1, result.getOrNull())
         assertEquals(1, fakeDao.insertedWords.size)
         assertEquals("word_1", fakeDao.insertedWords[0].id)
         assertEquals(listOf("word_2"), fakeDao.deletedIds)

@@ -157,31 +157,97 @@ fun WordDetailScreen(
                         }
                     }
 
-                    // Definition Section
-                    SectionContainer(title = "DEFINITION") {
-                        Text(
-                            text = word.definition,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = 18.sp,
-                                lineHeight = 26.sp
-                            ),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
+                    // Meaning Languages / Definition Section
+                    val selectedLanguages = state.selectedMeaningLanguages
+                    if (selectedLanguages.isNotEmpty()) {
+                        val resolvedMeanings = word.resolveMeanings(selectedLanguages)
+                        if (resolvedMeanings.size == 1) {
+                            val single = resolvedMeanings.first()
+                            SectionContainer(
+                                title = "${single.languageName.uppercase()} MEANING"
+                            ) {
+                                Text(
+                                    text = single.meaning,
+                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                        fontSize = 18.sp,
+                                        lineHeight = 26.sp
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        } else {
+                            SectionContainer(title = "MEANINGS") {
+                                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                                    resolvedMeanings.forEach { item ->
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                                                .padding(14.dp),
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Text(
+                                                text = item.languageName,
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                            Text(
+                                                text = item.meaning,
+                                                style = MaterialTheme.typography.bodyLarge.copy(
+                                                    fontSize = 16.sp,
+                                                    lineHeight = 24.sp
+                                                ),
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
 
-                    // Simple Meaning Section
-                    val simpleMeaning = word.simpleMeaning
-                    if (!simpleMeaning.isNullOrEmpty()) {
+                        // English Definition Reference
                         SectionContainer(
-                            title = "IN SIMPLE WORDS",
+                            title = "ENGLISH DEFINITION",
                             accentColor = MaterialTheme.colorScheme.secondary
                         ) {
                             Text(
-                                text = simpleMeaning,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.secondary,
-                                fontWeight = FontWeight.Medium
+                                text = word.definition,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontSize = 15.sp,
+                                    lineHeight = 22.sp
+                                ),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                        }
+                    } else {
+                        // Default English Definition Section
+                        SectionContainer(title = "DEFINITION") {
+                            Text(
+                                text = word.definition,
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontSize = 18.sp,
+                                    lineHeight = 26.sp
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        // Simple Meaning Section
+                        val simpleMeaning = word.simpleMeaning
+                        if (!simpleMeaning.isNullOrEmpty()) {
+                            SectionContainer(
+                                title = "IN SIMPLE WORDS",
+                                accentColor = MaterialTheme.colorScheme.secondary
+                            ) {
+                                Text(
+                                    text = simpleMeaning,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
                         }
                     }
 

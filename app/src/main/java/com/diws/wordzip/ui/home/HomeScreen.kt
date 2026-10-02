@@ -212,7 +212,8 @@ fun HomeScreen(
                     item {
                         WordOfTheDaySection(
                             word = word,
-                            onCardClick = { onNavigateToDetail(word.id) }
+                            onCardClick = { onNavigateToDetail(word.id) },
+                            selectedMeaningLanguages = state.selectedMeaningLanguages
                         )
                     }
                 }
@@ -241,7 +242,8 @@ fun HomeScreen(
                 items(state.todayWords, key = { it.id }) { word ->
                     WordCard(
                         word = word,
-                        onClick = { onNavigateToDetail(word.id) }
+                        onClick = { onNavigateToDetail(word.id) },
+                        selectedMeaningLanguages = state.selectedMeaningLanguages
                     )
                 }
 
@@ -405,7 +407,11 @@ fun ProgressCard(learnedToday: Int, target: Int) {
 }
 
 @Composable
-fun WordOfTheDaySection(word: Word, onCardClick: () -> Unit) {
+fun WordOfTheDaySection(
+    word: Word,
+    onCardClick: () -> Unit,
+    selectedMeaningLanguages: List<String> = emptyList()
+) {
     Column {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -486,11 +492,29 @@ fun WordOfTheDaySection(word: Word, onCardClick: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Text(
-                    text = word.definition,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                if (selectedMeaningLanguages.isNotEmpty()) {
+                    val resolvedMeanings = word.resolveMeanings(selectedMeaningLanguages)
+                    resolvedMeanings.forEachIndexed { idx, item ->
+                        if (idx > 0) Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "${item.languageName}:",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = item.meaning,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                } else {
+                    Text(
+                        text = word.definition,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
 
                 word.example?.let { example ->
                     Spacer(modifier = Modifier.height(10.dp))

@@ -5,15 +5,18 @@ import com.diws.wordzip.data.local.DailyWordEntity
 import com.diws.wordzip.data.local.InitialSeedData
 import com.diws.wordzip.data.local.WordDao
 import com.diws.wordzip.data.local.WordEntity
+import com.diws.wordzip.data.local.WordTranslationEntity
 import com.diws.wordzip.data.preferences.UserPreferencesRepository
 import com.diws.wordzip.data.remote.DictionaryApi
 import com.diws.wordzip.data.remote.firebase.VocabularyRemoteDataSource
+import com.diws.wordzip.data.remote.translation.TranslationDataSource
 import com.diws.wordzip.domain.model.Word
 import com.diws.wordzip.domain.model.WordDifficulty
 import com.diws.wordzip.domain.repository.WordRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -26,52 +29,63 @@ class WordRepositoryImpl(
     private val wordDao: WordDao,
     private val dictionaryApi: DictionaryApi,
     private val vocabularyRemoteDataSource: VocabularyRemoteDataSource? = null,
-    private val userPreferencesRepository: UserPreferencesRepository? = null
+    private val userPreferencesRepository: UserPreferencesRepository? = null,
+    private val translationDataSource: TranslationDataSource? = null
 ) : WordRepository {
 
     override fun getAllWords(): Flow<List<Word>> {
-        return wordDao.getAllWords().map { entities ->
-            entities.map { it.toDomainModel() }
+        return combine(wordDao.getAllWords(), wordDao.getAllTranslations()) { entities, translations ->
+            val translationMap = translations.groupBy { it.wordId }
+                .mapValues { (_, list) -> list.associate { it.languageCode to it.meaning } }
+            entities.map { it.toDomainModel(translationMap[it.id] ?: emptyMap()) }
         }
     }
 
     override fun getHomeWords(): Flow<List<Word>> {
-        return wordDao.getHomeWords().map { entities ->
-            entities.map { it.toDomainModel() }
+        return combine(wordDao.getHomeWords(), wordDao.getAllTranslations()) { entities, translations ->
+            val translationMap = translations.groupBy { it.wordId }
+                .mapValues { (_, list) -> list.associate { it.languageCode to it.meaning } }
+            entities.map { it.toDomainModel(translationMap[it.id] ?: emptyMap()) }
         }
     }
 
     override suspend fun getWordById(id: String): Word? {
-        return wordDao.getWordById(id)?.toDomainModel()
+        val entity = wordDao.getWordById(id) ?: return null
+        val translations = wordDao.getTranslationsForWordSync(id).associate { it.languageCode to it.meaning }
+        return entity.toDomainModel(translations)
     }
 
     override fun getWordFlow(id: String): Flow<Word?> {
-        return wordDao.getWordByIdFlow(id).map { entity ->
-            entity?.toDomainModel()
+        return combine(wordDao.getWordByIdFlow(id), wordDao.getTranslationsForWord(id)) { entity, translations ->
+            entity?.toDomainModel(translations.associate { it.languageCode to it.meaning })
         }
     }
 
     override fun searchWords(query: String): Flow<List<Word>> {
-        return wordDao.searchWords(query).map { entities ->
-            entities.map { it.toDomainModel() }
+        return combine(wordDao.searchWords(query), wordDao.getAllTranslations()) { entities, translations ->
+            val translationMap = translations.groupBy { it.wordId }
+                .mapValues { (_, list) -> list.associate { it.languageCode to it.meaning } }
+            entities.map { it.toDomainModel(translationMap[it.id] ?: emptyMap()) }
         }
     }
 
     override fun getWordsByLearnedStatus(isLearned: Boolean): Flow<List<Word>> {
-        return wordDao.getWordsByLearnedStatus(isLearned).map { entities ->
-            entities.map { it.toDomainModel() }
+        return combine(wordDao.getWordsByLearnedStatus(isLearned), wordDao.getAllTranslations()) { entities, translations ->
+            val translationMap = translations.groupBy { it.wordId }
+                .mapValues { (_, list) -> list.associate { it.languageCode to it.meaning } }
+            entities.map { it.toDomainModel(translationMap[it.id] ?: emptyMap()) }
         }
     }
 
     override fun getWordsByDifficulty(difficulty: WordDifficulty): Flow<List<Word>> {
-        return wordDao.getWordsByDifficulty(difficulty.name).map { entities ->
-            entities.map { it.toDomainModel() }
+        return combine(wordDao.getWordsByDifficulty(difficulty.name), wordDao.getAllTranslations()) { entities, translations ->
+            val translationMap = translations.groupBy { it.wordId }
+                .mapValues { (_, list) -> list.associate { it.languageCode to it.meaning } }
+            entities.map { it.toDomainModel(translationMap[it.id] ?: emptyMap()) }
         }
     }
 
     override fun getWordOfTheDay(): Flow<Word?> = flow {
-        // Note: seeding is handled by Application.onCreate — do NOT call it here
-        // to avoid blocking the first UI emit behind a Firebase network round-trip.
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
         var dailyEntity = wordDao.getDailyWordSync(today)
         if (dailyEntity == null) {
@@ -89,26 +103,35 @@ class WordRepositoryImpl(
             }
         }
 
-        val initialWord = dailyEntity?.let { wordDao.getWordById(it.wordId)?.toDomainModel() }
+        val initialWord = dailyEntity?.let { getWordById(it.wordId) }
         emit(initialWord)
 
         wordDao.getDailyWord(today).collect { updatedDaily ->
-            val updatedWord = updatedDaily?.let { wordDao.getWordById(it.wordId)?.toDomainModel() }
+            val updatedWord = updatedDaily?.let { getWordById(it.wordId) }
             emit(updatedWord)
         }
     }
 
     override suspend fun getUnlearnedWordsForNotification(limit: Int): List<Word> {
         val entities = wordDao.getUnlearnedWordsForNotification(limit)
-        return if (entities.isNotEmpty()) {
-            entities.map { it.toDomainModel() }
+        val chosenEntities = if (entities.isNotEmpty()) {
+            entities
         } else {
-            listOfNotNull(wordDao.getRandomWord()?.toDomainModel())
+            listOfNotNull(wordDao.getRandomWord())
         }
+
+        val wordIds = chosenEntities.map { it.id }
+        val translations = wordDao.getTranslationsForWords(wordIds)
+        val translationMap = translations.groupBy { it.wordId }
+            .mapValues { (_, list) -> list.associate { it.languageCode to it.meaning } }
+
+        return chosenEntities.map { it.toDomainModel(translationMap[it.id] ?: emptyMap()) }
     }
 
     override suspend fun getRandomWord(): Word? {
-        return wordDao.getRandomWord()?.toDomainModel()
+        val entity = wordDao.getRandomWord() ?: return null
+        val translations = wordDao.getTranslationsForWordSync(entity.id).associate { it.languageCode to it.meaning }
+        return entity.toDomainModel(translations)
     }
 
     override fun getLearnedCount(): Flow<Int> {
@@ -131,7 +154,7 @@ class WordRepositoryImpl(
         return try {
             val entity = wordDao.getWordById(wordId) ?: return Result.failure(Exception("Word not found"))
             val response = dictionaryApi.getWordDefinition(entity.word.lowercase())
-            val entry = response.firstOrNull() ?: return Result.success(entity.toDomainModel())
+            val entry = response.firstOrNull() ?: return Result.success(getWordById(wordId) ?: entity.toDomainModel())
 
             val audioUrl = entry.phonetics?.firstOrNull { !it.audio.isNull_or_empty() }?.audio ?: entity.audioUrl
             val phoneticText = entry.phonetic ?: entry.phonetics?.firstOrNull { !it.text.isNull_or_empty() }?.text ?: entity.pronunciation
@@ -150,11 +173,12 @@ class WordRepositoryImpl(
                 audioUrl = audioUrl
             )
             wordDao.updateWord(updatedEntity)
-            Result.success(updatedEntity.toDomainModel())
+            val updatedWord = getWordById(wordId) ?: updatedEntity.toDomainModel()
+            Result.success(updatedWord)
         } catch (e: Exception) {
-            val localEntity = wordDao.getWordById(wordId)
-            if (localEntity != null) {
-                Result.success(localEntity.toDomainModel())
+            val localWord = getWordById(wordId)
+            if (localWord != null) {
+                Result.success(localWord)
             } else {
                 Result.failure(e)
             }
@@ -195,11 +219,17 @@ class WordRepositoryImpl(
                     dto.toEntity(existingEntity)
                 }
                 wordDao.insertWords(entitiesToInsert)
+
+                val translationsToInsert = activeDtos.flatMap { it.toTranslationEntities() }
+                if (translationsToInsert.isNotEmpty()) {
+                    wordDao.insertTranslations(translationsToInsert)
+                }
                 Log.d("FirebaseSync", "Inserted/updated ${entitiesToInsert.size} words into Room")
             }
 
             if (inactiveIds.isNotEmpty()) {
                 wordDao.deleteWordsByIds(inactiveIds)
+                wordDao.deleteTranslationsForWords(inactiveIds)
                 Log.d("FirebaseSync", "Deleted ${inactiveIds.size} inactive words from Room")
             }
 
@@ -224,8 +254,8 @@ class WordRepositoryImpl(
         if (count == 0) {
             wordDao.insertWords(InitialSeedData.getInitialWords())
         }
-        // Run Firebase sync in the background so the UI never waits for a
-        // network round-trip before showing locally-available words.
+        // Always populate/update seed translations so newly supported Indian languages are immediately present offline
+        wordDao.insertTranslations(InitialSeedData.getInitialTranslations())
         CoroutineScope(Dispatchers.IO).launch {
             syncVocabularyWithRemote()
         }

@@ -59,7 +59,9 @@ class FakeWordRepository : WordRepository {
     }
     override suspend fun syncVocabularyWithRemote(): Result<Int> = Result.success(0)
     override suspend fun seedInitialDataIfNeeded() {}
+    override suspend fun getOrFetchTranslation(wordId: String, languageCode: String): String? = null
 }
+
 
 class GetNextWordUseCaseTest {
 

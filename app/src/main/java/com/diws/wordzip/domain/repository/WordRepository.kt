@@ -22,4 +22,6 @@ interface WordRepository {
     suspend fun refreshWordFromApi(wordId: String): Result<Word>
     suspend fun syncVocabularyWithRemote(): Result<Int>
     suspend fun seedInitialDataIfNeeded()
+    suspend fun getOrFetchTranslation(wordId: String, languageCode: String): String?
 }
+

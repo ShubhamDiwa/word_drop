@@ -9,12 +9,15 @@ import com.diws.wordzip.domain.repository.WordRepository
 import com.diws.wordzip.domain.usecase.GetVocabularyUseCase
 import com.diws.wordzip.util.NetworkMonitor
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -70,6 +73,23 @@ class VocabularyViewModel @Inject constructor(
             }
         }
         refreshVocabularyFromFirebase()
+
+        // Pre-fetch translations for selected language
+        viewModelScope.launch(Dispatchers.IO) {
+            userPreferencesRepository.selectedMeaningLanguagesFlow
+                .distinctUntilChanged()
+                .collect { languages ->
+                    val targetLang = languages.firstOrNull()?.trim()?.lowercase() ?: ""
+                    if (targetLang.isNotBlank() && targetLang != "en") {
+                        val currentWords = getVocabularyUseCase().first()
+                        currentWords.take(50).forEach { word ->
+                            if (word.translations[targetLang].isNullOrBlank()) {
+                                wordRepository.getOrFetchTranslation(word.id, targetLang)
+                            }
+                        }
+                    }
+                }
+        }
     }
 
     val uiState: StateFlow<VocabularyUiState> = combine(

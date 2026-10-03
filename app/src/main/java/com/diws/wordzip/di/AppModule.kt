@@ -121,6 +121,24 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideProverbDao(database: WordDatabase): com.diws.wordzip.data.local.ProverbDao {
+        return database.proverbDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideProverbRepository(
+        proverbDao: com.diws.wordzip.data.local.ProverbDao,
+        firestore: FirebaseFirestore?
+    ): com.diws.wordzip.domain.repository.ProverbRepository {
+        return com.diws.wordzip.data.repository.ProverbRepositoryImpl(
+            proverbDao = proverbDao,
+            firestore = firestore
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideUserPreferencesRepository(@ApplicationContext context: Context): UserPreferencesRepository {
         return UserPreferencesRepository(context)
     }

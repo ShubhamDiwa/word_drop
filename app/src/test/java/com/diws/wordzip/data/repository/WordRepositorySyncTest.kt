@@ -112,9 +112,19 @@ class WordRepositorySyncTest {
     }
 
     @Test
-    fun `syncVocabularyWithRemote does nothing when no changed words returned`() = runTest {
+    fun `syncVocabularyWithRemote syncs all 350 words into Room without artificial limit`() = runTest {
+        val dtos = (1..350).map { i ->
+            FirebaseWordDto(
+                id = "word_$i",
+                word = "Word $i",
+                definition = "Definition for word $i",
+                active = true,
+                updatedAt = i.toLong()
+            )
+        }
+
         val fakeDao = FakeWordDao()
-        val fakeRemote = FakeVocabularyRemoteDataSource(emptyList())
+        val fakeRemote = FakeVocabularyRemoteDataSource(dtos)
         val repository = WordRepositoryImpl(
             wordDao = fakeDao,
             dictionaryApi = FakeDictionaryApi(),
@@ -125,8 +135,110 @@ class WordRepositorySyncTest {
         val result = repository.syncVocabularyWithRemote()
 
         assertTrue(result.isSuccess)
-        assertEquals(0, result.getOrNull())
-        assertTrue(fakeDao.insertedWords.isEmpty())
-        assertTrue(fakeDao.deletedIds.isEmpty())
+        assertEquals(350, result.getOrNull())
+        assertEquals(350, fakeDao.insertedWords.size)
+        assertEquals("word_1", fakeDao.insertedWords.first().id)
+        assertEquals("word_350", fakeDao.insertedWords.last().id)
+    }
+
+    @Test
+    fun `sync handles duplicate and invalid entries without dropping valid entries`() = runTest {
+        val dtos = listOf(
+            FirebaseWordDto(id = "w1", word = "Valid Word 1", definition = "Def 1", active = true),
+            FirebaseWordDto(id = "", word = "No ID", definition = "Def", active = true), // Invalid
+            FirebaseWordDto(id = "w2", word = "", definition = "Def", active = true), // Invalid
+            FirebaseWordDto(id = "w3", word = "Valid Word 3", definition = "", simpleMeaning = "Simple meaning", active = true), // Valid fallback
+            FirebaseWordDto(id = "w4", word = "Inactive Word", definition = "Def 4", active = false) // Inactive
+        )
+
+        val fakeDao = FakeWordDao()
+        val fakeRemote = FakeVocabularyRemoteDataSource(dtos)
+        val repository = WordRepositoryImpl(
+            wordDao = fakeDao,
+            dictionaryApi = FakeDictionaryApi(),
+            vocabularyRemoteDataSource = fakeRemote,
+            userPreferencesRepository = null
+        )
+
+        val result = repository.syncVocabularyWithRemote()
+
+        assertTrue(result.isSuccess)
+        assertEquals(2, result.getOrNull())
+        assertEquals(2, fakeDao.insertedWords.size)
+        assertEquals(listOf("w1", "w3"), fakeDao.insertedWords.map { it.id })
+        assertEquals(listOf("w4"), fakeDao.deletedIds)
+    }
+
+    @Test
+    fun `home query stays limited while vocabulary queries full dataset`() = runTest {
+        val words = (1..350).map { i ->
+            WordEntity(
+                id = "word_$i",
+                word = "Word $i",
+                pronunciation = "/w$i/",
+                partOfSpeech = "NOUN",
+                definition = "Definition $i",
+                simpleMeaning = "Simple $i",
+                example = "Example $i",
+                synonyms = "syn1,syn2",
+                difficulty = "INTERMEDIATE",
+                category = "General",
+                audioUrl = null
+            )
+        }
+
+        val inMemoryDao = object : WordDao {
+            val db = words.toMutableList()
+            override fun getAllWords(): Flow<List<WordEntity>> = flowOf(db)
+            override fun getHomeWords(): Flow<List<WordEntity>> = flowOf(db.take(20))
+            override suspend fun getWordById(id: String) = db.find { it.id == id }
+            override fun getWordByIdFlow(id: String) = flowOf(db.find { it.id == id })
+            override fun searchWords(query: String) = flowOf(db.filter { it.word.contains(query) })
+            override fun getWordsByLearnedStatus(isLearned: Boolean) = flowOf(db.filter { it.isLearned == isLearned })
+            override fun getWordsByDifficulty(difficulty: String) = flowOf(db.filter { it.difficulty == difficulty })
+            override fun getDailyWord(date: String) = flowOf(null)
+            override suspend fun getDailyWordSync(date: String) = null
+            override suspend fun insertDailyWord(dailyWord: DailyWordEntity) {}
+            override suspend fun getRecentDailyWords(limit: Int) = emptyList<DailyWordEntity>()
+            override suspend fun getUnlearnedWordsForNotification(limit: Int) = db.take(limit)
+            override suspend fun getRandomWord() = db.firstOrNull()
+            override suspend fun getCount() = db.size
+            override fun getLearnedCount() = flowOf(0)
+            override suspend fun getLearnedCountSync() = 0
+            override suspend fun insertWords(words: List<WordEntity>) { db.addAll(words) }
+            override suspend fun deleteWordsByIds(ids: List<String>) { db.removeAll { it.id in ids } }
+            override suspend fun insertWord(word: WordEntity) { db.add(word) }
+            override suspend fun updateWord(word: WordEntity) {}
+            override suspend fun updateLearnedStatus(id: String, isLearned: Boolean) {}
+            override suspend fun updateWordShownStats(id: String, timestamp: Long) {}
+            override suspend fun insertTranslations(translations: List<com.diws.wordzip.data.local.WordTranslationEntity>) {}
+            override suspend fun insertTranslation(translation: com.diws.wordzip.data.local.WordTranslationEntity) {}
+            override fun getTranslationsForWord(wordId: String) = flowOf(emptyList<com.diws.wordzip.data.local.WordTranslationEntity>())
+            override suspend fun getTranslationsForWordSync(wordId: String) = emptyList<com.diws.wordzip.data.local.WordTranslationEntity>()
+            override fun getAllTranslations() = flowOf(emptyList<com.diws.wordzip.data.local.WordTranslationEntity>())
+            override suspend fun getAllTranslationsSync() = emptyList<com.diws.wordzip.data.local.WordTranslationEntity>()
+            override suspend fun getTranslationsForWords(wordIds: List<String>) = emptyList<com.diws.wordzip.data.local.WordTranslationEntity>()
+            override suspend fun deleteTranslationsForWord(wordId: String) {}
+            override suspend fun deleteTranslationsForWords(wordIds: List<String>) {}
+        }
+
+        val repository = WordRepositoryImpl(
+            wordDao = inMemoryDao,
+            dictionaryApi = FakeDictionaryApi()
+        )
+
+        // Home should have exactly 20
+        var homeCount = 0
+        repository.getHomeWords().collect { homeWords ->
+            homeCount = homeWords.size
+        }
+        assertEquals(20, homeCount)
+
+        // Full vocabulary should have all 350
+        var fullCount = 0
+        repository.getAllWords().collect { allWords ->
+            fullCount = allWords.size
+        }
+        assertEquals(350, fullCount)
     }
 }

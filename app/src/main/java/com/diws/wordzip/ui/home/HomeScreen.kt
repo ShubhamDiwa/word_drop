@@ -63,12 +63,14 @@ import com.diws.wordzip.ui.components.AppLoader
 import com.diws.wordzip.ui.components.AudioPlayerButton
 import com.diws.wordzip.ui.components.BannerAd
 import com.diws.wordzip.ui.components.DifficultyChip
+import com.diws.wordzip.ui.components.ProverbOfTheDayCard
 import com.diws.wordzip.ui.components.WordCard
 
 @Composable
 fun HomeScreen(
     onNavigateToDetail: (String) -> Unit,
     onNavigateToPractice: () -> Unit = {},
+    onNavigateToProverbs: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -203,7 +205,10 @@ fun HomeScreen(
                 }
 
                 item {
-                    PracticeQuickCard(onPracticeClick = onNavigateToPractice)
+                    QuickActionsRow(
+                        onPracticeClick = onNavigateToPractice,
+                        onProverbsClick = onNavigateToProverbs
+                    )
                 }
 
                 // (BannerAd was removed from here)
@@ -214,6 +219,15 @@ fun HomeScreen(
                             word = word,
                             onCardClick = { onNavigateToDetail(word.id) },
                             selectedMeaningLanguages = state.selectedMeaningLanguages
+                        )
+                    }
+                }
+
+                state.proverbOfTheDay?.let { proverb ->
+                    item {
+                        ProverbOfTheDayCard(
+                            proverb = proverb,
+                            onExploreClick = onNavigateToProverbs
                         )
                     }
                 }
@@ -540,67 +554,104 @@ fun WordOfTheDaySection(
 }
 
 @Composable
-fun PracticeQuickCard(
-    onPracticeClick: () -> Unit
+fun QuickActionsRow(
+    onPracticeClick: () -> Unit,
+    onProverbsClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onPracticeClick),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Row(
+        // Practice Card
+        Card(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .weight(1f)
+                .clickable(onClick = onPracticeClick),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(46.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)),
-                    contentAlignment = Alignment.Center
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "🎯", fontSize = 22.sp)
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = "🎯", fontSize = 18.sp)
+                    }
+
+                    Text(
+                        text = "PLAY",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
 
-                Spacer(modifier = Modifier.width(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                Column {
-                    Text(
-                        text = "Practice & Quizzes",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "Flashcards • 2-Min Daily Quiz",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.primary)
-                    .padding(horizontal = 14.dp, vertical = 8.dp),
-                contentAlignment = Alignment.Center
-            ) {
                 Text(
-                    text = "Play",
-                    style = MaterialTheme.typography.labelMedium,
+                    text = "Practice Quiz",
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Flashcards & Quiz",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        // Proverbs Card (Highlighted with Amber Glow & NEW tag)
+        Card(
+            modifier = Modifier
+                .weight(1f)
+                .clickable(onClick = onProverbsClick),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+            border = BorderStroke(1.5.dp, Color(0xFFFF9800).copy(alpha = 0.5f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFFF9800).copy(alpha = 0.18f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = "📖", fontSize = 18.sp)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = "Proverbs",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "कहावतें (Hindi-Eng)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFFF9800),
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }

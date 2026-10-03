@@ -175,6 +175,9 @@ fun AppNavigation(
                     },
                     onNavigateToPractice = {
                         navController.navigate(Screen.Practice.route)
+                    },
+                    onNavigateToProverbs = {
+                        navController.navigate(Screen.Proverbs.route)
                     }
                 )
             }
@@ -184,6 +187,9 @@ fun AppNavigation(
                 VocabularyScreen(
                     onNavigateToDetail = { wordId ->
                         navController.navigate(Screen.WordDetail.createRoute(wordId))
+                    },
+                    onNavigateToProverbs = {
+                        navController.navigate(Screen.Proverbs.route)
                     }
                 )
             }
@@ -234,6 +240,33 @@ fun AppNavigation(
             ) {
                 PracticeScreen(
                     onNavigateBack = {
+                        if (!navController.popBackStack()) {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Home.route) { inclusive = true }
+                            }
+                        }
+                    }
+                )
+            }
+
+            // ── Proverbs (कहावतें) ─────────────────────────────────────────
+            composable(
+                route = Screen.Proverbs.route,
+                enterTransition = {
+                    slideInVertically(
+                        initialOffsetY = { it / 6 },
+                        animationSpec = tween(TRANSITION_DURATION, easing = FastOutSlowInEasing)
+                    ) + fadeIn(tween(TRANSITION_DURATION))
+                },
+                popExitTransition = {
+                    slideOutVertically(
+                        targetOffsetY = { it / 6 },
+                        animationSpec = tween(TRANSITION_DURATION, easing = FastOutSlowInEasing)
+                    ) + fadeOut(tween(TRANSITION_DURATION))
+                }
+            ) {
+                com.diws.wordzip.ui.proverbs.ProverbsScreen(
+                    onBackClick = {
                         if (!navController.popBackStack()) {
                             navController.navigate(Screen.Home.route) {
                                 popUpTo(Screen.Home.route) { inclusive = true }

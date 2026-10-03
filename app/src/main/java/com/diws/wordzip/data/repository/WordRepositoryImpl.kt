@@ -51,13 +51,33 @@ class WordRepositoryImpl(
 
     override suspend fun getWordById(id: String): Word? {
         val entity = wordDao.getWordById(id) ?: return null
-        val translations = wordDao.getTranslationsForWordSync(id).associate { it.languageCode to it.meaning }
-        return entity.toDomainModel(translations)
+        var translations = wordDao.getTranslationsForWordSync(id)
+        if (translations.isEmpty()) {
+            val seedTranslations = InitialSeedData.getInitialTranslations().filter { it.wordId == id }
+            if (seedTranslations.isNotEmpty()) {
+                wordDao.insertTranslations(seedTranslations)
+                translations = seedTranslations
+            }
+        }
+        return entity.toDomainModel(translations.associate { it.languageCode to it.meaning })
     }
 
     override fun getWordFlow(id: String): Flow<Word?> {
         return combine(wordDao.getWordByIdFlow(id), wordDao.getTranslationsForWord(id)) { entity, translations ->
-            entity?.toDomainModel(translations.associate { it.languageCode to it.meaning })
+            if (entity != null && translations.isEmpty()) {
+                val seedTranslations = InitialSeedData.getInitialTranslations().filter { it.wordId == id }
+                if (seedTranslations.isNotEmpty()) {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        wordDao.insertTranslations(seedTranslations)
+                    }
+                }
+            }
+            val effectiveTranslations = if (translations.isEmpty() && entity != null) {
+                InitialSeedData.getInitialTranslations().filter { it.wordId == id }
+            } else {
+                translations
+            }
+            entity?.toDomainModel(effectiveTranslations.associate { it.languageCode to it.meaning })
         }
     }
 
@@ -188,53 +208,68 @@ class WordRepositoryImpl(
     override suspend fun syncVocabularyWithRemote(): Result<Int> {
         return try {
             val remoteDataSource = vocabularyRemoteDataSource ?: return Result.success(0)
-            val changedDtos = remoteDataSource.getChangedWordsSince(0L) // ALWAYS FULL SYNC FOR NOW
+            val lastSyncTimestamp = userPreferencesRepository?.lastVocabularySyncTimestampFlow?.first() ?: 0L
+            val changedDtos = remoteDataSource.getChangedWordsSince(lastSyncTimestamp)
 
             Log.d("FirebaseSync", "=== SYNC START ===")
-            Log.d("FirebaseSync", "Total documents from Firestore: ${changedDtos.size}")
+            Log.d("FirebaseSync", "Firebase returned = ${changedDtos.size}")
 
             if (changedDtos.isEmpty()) {
                 Log.w("FirebaseSync", "No words returned from Firebase — check Firestore collection name and rules")
+                val totalInRoom = wordDao.getCount()
+                Log.d("FirebaseSync", "Total words in Room = $totalInRoom")
+                Log.d("FirebaseSync", "=== SYNC END ===")
                 return Result.success(0)
             }
 
             val validDtos = changedDtos.filter { it.isValid() }
             val invalidDtos = changedDtos.filter { !it.isValid() }
             val activeDtos = validDtos.filter { it.active }
-            val inactiveIds = validDtos.filter { !it.active }.map { it.id }
+            val inactiveDtos = validDtos.filter { !it.active }
+            val inactiveIds = inactiveDtos.map { it.id }
 
-            Log.d("FirebaseSync", "Valid DTOs (id+word+definition not blank): ${validDtos.size}")
-            Log.d("FirebaseSync", "Invalid/dropped DTOs: ${invalidDtos.size}")
+            Log.d("FirebaseSync", "Valid words = ${validDtos.size}")
+
             if (invalidDtos.isNotEmpty()) {
-                invalidDtos.take(10).forEach { dto ->
-                    Log.w("FirebaseSync", "  INVALID: id='${dto.id}' word='${dto.word}' definition='${dto.definition.take(30)}'")
+                invalidDtos.forEach { dto ->
+                    val reason = when {
+                        dto.id.isBlank() -> "Missing ID"
+                        dto.word.isBlank() -> "Missing word"
+                        dto.definition.isBlank() && dto.simpleMeaning.isNullOrBlank() -> "Missing definition/meaning"
+                        else -> "Invalid data"
+                    }
+                    Log.w("FirebaseSync", "Skipped invalid document: reason='$reason', id='${dto.id}', word='${dto.word}'")
                 }
             }
-            Log.d("FirebaseSync", "Active DTOs to insert: ${activeDtos.size}")
-            Log.d("FirebaseSync", "Inactive DTOs to delete: ${inactiveIds.size}")
 
-            if (activeDtos.isNotEmpty()) {
-                val entitiesToInsert = activeDtos.map { dto ->
-                    val existingEntity = wordDao.getWordById(dto.id)
-                    dto.toEntity(existingEntity)
+            if (inactiveDtos.isNotEmpty()) {
+                inactiveDtos.forEach { dto ->
+                    Log.d("FirebaseSync", "Inactive word (marked for removal): id='${dto.id}', word='${dto.word}'")
                 }
+            }
+
+            val entitiesToInsert = activeDtos.map { dto ->
+                val existingEntity = wordDao.getWordById(dto.id)
+                dto.toEntity(existingEntity)
+            }
+            Log.d("FirebaseSync", "Words to insert/update = ${entitiesToInsert.size}")
+
+            if (entitiesToInsert.isNotEmpty()) {
                 wordDao.insertWords(entitiesToInsert)
 
                 val translationsToInsert = activeDtos.flatMap { it.toTranslationEntities() }
                 if (translationsToInsert.isNotEmpty()) {
                     wordDao.insertTranslations(translationsToInsert)
                 }
-                Log.d("FirebaseSync", "Inserted/updated ${entitiesToInsert.size} words into Room")
             }
 
             if (inactiveIds.isNotEmpty()) {
                 wordDao.deleteWordsByIds(inactiveIds)
                 wordDao.deleteTranslationsForWords(inactiveIds)
-                Log.d("FirebaseSync", "Deleted ${inactiveIds.size} inactive words from Room")
             }
 
             val totalInRoom = wordDao.getCount()
-            Log.d("FirebaseSync", "Room now has $totalInRoom total words")
+            Log.d("FirebaseSync", "Total words in Room = $totalInRoom")
             Log.d("FirebaseSync", "=== SYNC END ===")
 
             val maxUpdatedAt = validDtos.maxOfOrNull { it.updatedAt } ?: 0L
@@ -259,6 +294,37 @@ class WordRepositoryImpl(
         CoroutineScope(Dispatchers.IO).launch {
             syncVocabularyWithRemote()
         }
+    }
+
+    override suspend fun getOrFetchTranslation(wordId: String, languageCode: String): String? {
+        val cleanCode = languageCode.lowercase().trim()
+        val existing = wordDao.getTranslationsForWordSync(wordId).firstOrNull { it.languageCode.equals(cleanCode, ignoreCase = true) }
+        if (existing != null && existing.meaning.isNotBlank()) {
+            return existing.meaning
+        }
+
+        // Check seed translations
+        val seed = InitialSeedData.getInitialTranslations().firstOrNull { it.wordId == wordId && it.languageCode.equals(cleanCode, ignoreCase = true) }
+        if (seed != null) {
+            wordDao.insertTranslation(seed)
+            return seed.meaning
+        }
+
+        // Try remote translation service if available
+        if (translationDataSource != null) {
+            val entity = wordDao.getWordById(wordId) ?: return null
+            val englishText = entity.simpleMeaning?.takeIf { it.isNotBlank() } ?: entity.definition
+            if (englishText.isNotBlank()) {
+                val result = translationDataSource.translateText(englishText, "en", cleanCode)
+                val translated = result.getOrNull()
+                if (!translated.isNullOrBlank()) {
+                    val newEntity = WordTranslationEntity(wordId = wordId, languageCode = cleanCode, meaning = translated)
+                    wordDao.insertTranslation(newEntity)
+                    return translated
+                }
+            }
+        }
+        return null
     }
 
     private fun String?.isNull_or_empty(): Boolean = this == null || this.trim().isEmpty()

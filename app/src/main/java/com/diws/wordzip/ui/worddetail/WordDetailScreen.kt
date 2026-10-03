@@ -1,7 +1,6 @@
 package com.diws.wordzip.ui.worddetail
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,11 +21,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.CheckCircleOutline
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.diws.wordzip.domain.model.MeaningLanguage
 import com.diws.wordzip.ui.components.AppLoader
 import com.diws.wordzip.ui.components.AudioPlayerButton
 import com.diws.wordzip.ui.components.DifficultyChip
@@ -63,6 +65,8 @@ fun WordDetailScreen(
             AppLoader(subtitle = "Loading word details...")
         } else if (state.word != null) {
             val word = state.word!!
+            val selectedLanguages = state.selectedMeaningLanguages
+            val preferredLang = selectedLanguages.firstOrNull() ?: ""
 
             Column(
                 modifier = Modifier
@@ -157,49 +161,77 @@ fun WordDetailScreen(
                         }
                     }
 
-                    // Meaning Languages / Definition Section
-                    val selectedLanguages = state.selectedMeaningLanguages
-                    if (selectedLanguages.isNotEmpty()) {
-                        val resolvedMeanings = word.resolveMeanings(selectedLanguages)
-                        if (resolvedMeanings.size == 1) {
-                            val single = resolvedMeanings.first()
-                            SectionContainer(
-                                title = "${single.languageName.uppercase()} MEANING"
-                            ) {
+                    // Meaning / Translation Section (based on Settings preference)
+                    val isRegional = preferredLang.isNotBlank() && !preferredLang.equals("en", ignoreCase = true)
+                    val language = if (isRegional) MeaningLanguage.fromCode(preferredLang) else null
+                    val translatedMeaning = if (isRegional) word.translations[preferredLang.lowercase()] else null
+
+                    if (isRegional) {
+                        val langName = language?.englishName ?: preferredLang.uppercase()
+                        val title = "${langName.uppercase()} MEANING" +
+                                (if (language?.nativeName != null) " (${language.nativeName})" else "")
+
+                        SectionContainer(
+                            title = title,
+                            accentColor = MaterialTheme.colorScheme.primary
+                        ) {
+                            if (!translatedMeaning.isNullOrBlank()) {
                                 Text(
-                                    text = single.meaning,
+                                    text = translatedMeaning,
                                     style = MaterialTheme.typography.bodyLarge.copy(
-                                        fontSize = 18.sp,
-                                        lineHeight = 26.sp
+                                        fontSize = 20.sp,
+                                        lineHeight = 28.sp
                                     ),
+                                    fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
-                            }
-                        } else {
-                            SectionContainer(title = "MEANINGS") {
-                                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                                    resolvedMeanings.forEach { item ->
-                                        Column(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clip(RoundedCornerShape(12.dp))
-                                                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                                                .padding(14.dp),
-                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                            } else if (state.isTranslating) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(18.dp),
+                                        strokeWidth = 2.dp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = "Translating into $langName...",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            } else {
+                                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Text(
+                                        text = if (!word.simpleMeaning.isNullOrBlank()) word.simpleMeaning else word.definition,
+                                        style = MaterialTheme.typography.bodyLarge.copy(
+                                            fontSize = 18.sp,
+                                            lineHeight = 26.sp
+                                        ),
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "Translation in $langName is loading or offline",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                        )
+                                        TextButton(
+                                            onClick = { viewModel.fetchTranslation(preferredLang) },
+                                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
                                         ) {
                                             Text(
-                                                text = item.languageName,
+                                                text = "Retry",
                                                 style = MaterialTheme.typography.labelMedium,
                                                 fontWeight = FontWeight.Bold,
                                                 color = MaterialTheme.colorScheme.primary
-                                            )
-                                            Text(
-                                                text = item.meaning,
-                                                style = MaterialTheme.typography.bodyLarge.copy(
-                                                    fontSize = 16.sp,
-                                                    lineHeight = 24.sp
-                                                ),
-                                                color = MaterialTheme.colorScheme.onSurface
                                             )
                                         }
                                     }
@@ -207,7 +239,7 @@ fun WordDetailScreen(
                             }
                         }
 
-                        // English Definition Reference
+                        // English Reference Definition
                         SectionContainer(
                             title = "ENGLISH DEFINITION",
                             accentColor = MaterialTheme.colorScheme.secondary
@@ -220,9 +252,20 @@ fun WordDetailScreen(
                                 ),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+
+                            val simpleMeaning = word.simpleMeaning
+                            if (!simpleMeaning.isNullOrEmpty()) {
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Text(
+                                    text = "Simple: $simpleMeaning",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
                         }
                     } else {
-                        // Default English Definition Section
+                        // Standard English Definition
                         SectionContainer(title = "DEFINITION") {
                             Text(
                                 text = word.definition,
@@ -349,7 +392,6 @@ private fun SectionContainer(
                 text = title,
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-
                 color = accentColor,
                 letterSpacing = 1.sp
             )

@@ -6,12 +6,19 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [WordEntity::class, DailyWordEntity::class, WordTranslationEntity::class],
-    version = 3,
+    entities = [
+        WordEntity::class,
+        DailyWordEntity::class,
+        WordTranslationEntity::class,
+        ProverbEntity::class,
+        DailyProverbEntity::class
+    ],
+    version = 4,
     exportSchema = false
 )
 abstract class WordDatabase : RoomDatabase() {
     abstract fun wordDao(): WordDao
+    abstract fun proverbDao(): ProverbDao
 
     companion object {
         const val DATABASE_NAME = "worddrop_db"
@@ -26,7 +33,7 @@ abstract class WordDatabase : RoomDatabase() {
                     WordDatabase::class.java,
                     DATABASE_NAME
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
@@ -58,6 +65,35 @@ abstract class WordDatabase : RoomDatabase() {
                 )
                 database.execSQL("CREATE INDEX IF NOT EXISTS `index_word_translations_wordId` ON `word_translations` (`wordId`)")
                 database.execSQL("CREATE INDEX IF NOT EXISTS `index_word_translations_languageCode` ON `word_translations` (`languageCode`)")
+            }
+        }
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `proverbs` (" +
+                            "`id` TEXT NOT NULL, " +
+                            "`englishText` TEXT NOT NULL, " +
+                            "`hindiText` TEXT NOT NULL, " +
+                            "`hindiEquivalent` TEXT, " +
+                            "`meaningEnglish` TEXT NOT NULL, " +
+                            "`meaningHindi` TEXT NOT NULL, " +
+                            "`example` TEXT, " +
+                            "`category` TEXT NOT NULL, " +
+                            "`isFavorite` INTEGER NOT NULL, " +
+                            "`timesShown` INTEGER NOT NULL, " +
+                            "`lastShownAt` INTEGER, " +
+                            "PRIMARY KEY(`id`)" +
+                            ")"
+                )
+                database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `daily_proverbs` (" +
+                            "`date` TEXT NOT NULL, " +
+                            "`proverbId` TEXT NOT NULL, " +
+                            "`assignedAt` INTEGER NOT NULL, " +
+                            "PRIMARY KEY(`date`)" +
+                            ")"
+                )
             }
         }
     }

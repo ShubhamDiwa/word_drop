@@ -4,17 +4,24 @@ from firebase_admin import credentials, firestore
 import uuid
 import time
 import os
+import sys
+
+# Ensure UTF-8 output on Windows consoles
+if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+
 
 # ==========================================
 # CONFIGURATION
 # ==========================================
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # 1. Place your CSV file in this scripts folder and name it 'words.csv'
-CSV_FILE_PATH = 'words.csv'
+CSV_FILE_PATH = os.path.join(SCRIPT_DIR, 'words.csv')
 
 # 2. You must generate a Firebase Service Account Key (JSON file)
 # Go to Firebase Console -> Project Settings -> Service Accounts -> Generate New Private Key
 # Save the JSON file in this scripts folder and rename it to 'serviceAccountKey.json'
-SERVICE_ACCOUNT_KEY_PATH = 'serviceAccountKey.json'
+SERVICE_ACCOUNT_KEY_PATH = os.path.join(SCRIPT_DIR, 'serviceAccountKey.json')
 
 COLLECTION_NAME = 'words'
 # ==========================================

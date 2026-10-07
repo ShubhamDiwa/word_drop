@@ -9,6 +9,13 @@ import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -37,6 +44,7 @@ import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.material.icons.rounded.QuestionAnswer
@@ -73,9 +81,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -101,6 +111,7 @@ fun SettingsScreen(
     var showDeveloperSheet by remember { mutableStateOf(false) }
     var showHelpSheet by remember { mutableStateOf(false) }
     var initialHelpTab by remember { mutableIntStateOf(0) }
+    var isMeaningLanguagesExpanded by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -339,138 +350,264 @@ fun SettingsScreen(
                                 }
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(18.dp))
+
+                        // Notification Difficulty Selector
+                        Text(
+                            text = "Notification Difficulty",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Select what difficulty level will be delivered in notifications",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            listOf(
+                                "MIXED" to "All Levels",
+                                "BEGINNER" to "Beginner",
+                                "INTERMEDIATE" to "Intermediate",
+                                "ADVANCED" to "Advanced"
+                            ).forEach { (diffKey, label) ->
+                                val isSelected = settings.difficultyFilter.equals(diffKey, ignoreCase = true)
+                                val containerBg = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh
+                                val contentFg = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(containerBg)
+                                        .clickable {
+                                            HapticFeedbackHelper.performClick(view, context)
+                                            viewModel.setDifficultyFilter(diffKey)
+                                        }
+                                        .padding(vertical = 10.dp, horizontal = 2.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = contentFg,
+                                        maxLines = 1,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
 
-            // Meaning Languages Selector Card
+            // Meaning Languages Selector Card (Expandable / Collapsible)
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize(),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        text = "Meaning Language",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "Choose your preferred language for vocabulary meanings",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
                     val selectedCode = settings.selectedMeaningLanguages.firstOrNull() ?: ""
+                    val currentLangName = if (selectedCode.isBlank() || selectedCode == "en") {
+                        "English"
+                    } else {
+                        MeaningLanguage.fromCode(selectedCode)?.englishName ?: selectedCode.uppercase()
+                    }
 
-                    // Option: English (Default)
-                    val isEnglishSelected = selectedCode.isBlank() || selectedCode == "en"
+                    // Header Row (Clickable without clipping)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(
-                                if (isEnglishSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
-                                else MaterialTheme.colorScheme.surfaceContainerHigh
-                            )
-                            .border(
-                                width = if (isEnglishSelected) 1.5.dp else 0.dp,
-                                color = if (isEnglishSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                shape = RoundedCornerShape(14.dp)
-                            )
                             .clickable {
                                 HapticFeedbackHelper.performClick(view, context)
-                                viewModel.selectMeaningLanguage(null)
-                            }
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                                isMeaningLanguagesExpanded = !isMeaningLanguagesExpanded
+                            },
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 10.dp)
+                        ) {
                             Text(
-                                text = "English (Default)",
-                                style = MaterialTheme.typography.titleSmall,
+                                text = "Meaning Language",
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
+                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "Show English simple meanings & definitions",
-                                style = MaterialTheme.typography.bodySmall,
+                                text = "Choose your preferred language for vocabulary meanings",
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
-                        RadioButton(
-                            selected = isEnglishSelected,
-                            onClick = {
-                                HapticFeedbackHelper.performClick(view, context)
-                                viewModel.selectMeaningLanguage(null)
-                            },
-                            colors = RadioButtonDefaults.colors(
-                                selectedColor = MaterialTheme.colorScheme.primary,
-                                unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    MeaningLanguage.SUPPORTED_LANGUAGES.forEachIndexed { index, language ->
-                        val isSelected = selectedCode.equals(language.code, ignoreCase = true)
-                        if (index > 0) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(
-                                    if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
-                                    else MaterialTheme.colorScheme.surfaceContainerHigh
-                                )
-                                .border(
-                                    width = if (isSelected) 1.5.dp else 0.dp,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                    shape = RoundedCornerShape(14.dp)
-                                )
-                                .clickable {
-                                    HapticFeedbackHelper.performClick(view, context)
-                                    viewModel.selectMeaningLanguage(if (isSelected) null else language.code)
-                                }
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Column {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f))
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
                                 Text(
-                                    text = language.englishName,
-                                    style = MaterialTheme.typography.titleSmall,
+                                    text = currentLangName,
+                                    style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = language.nativeName,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
 
-                            RadioButton(
-                                selected = isSelected,
-                                onClick = {
-                                    HapticFeedbackHelper.performClick(view, context)
-                                    viewModel.selectMeaningLanguage(if (isSelected) null else language.code)
-                                },
-                                colors = RadioButtonDefaults.colors(
-                                    selectedColor = MaterialTheme.colorScheme.primary,
-                                    unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                            val rotationState by animateFloatAsState(
+                                targetValue = if (isMeaningLanguagesExpanded) 180f else 0f,
+                                label = "meaning_language_arrow_rotation"
                             )
+
+                            Icon(
+                                imageVector = Icons.Rounded.KeyboardArrowDown,
+                                contentDescription = if (isMeaningLanguagesExpanded) "Collapse" else "Expand",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.rotate(rotationState)
+                            )
+                        }
+                    }
+
+                    AnimatedVisibility(
+                        visible = isMeaningLanguagesExpanded,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        Column(modifier = Modifier.padding(top = 16.dp)) {
+                            // Option: English (Default)
+                            val isEnglishSelected = selectedCode.isBlank() || selectedCode == "en"
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(
+                                        if (isEnglishSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+                                        else MaterialTheme.colorScheme.surfaceContainerHigh
+                                    )
+                                    .border(
+                                        width = if (isEnglishSelected) 1.5.dp else 0.dp,
+                                        color = if (isEnglishSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                        shape = RoundedCornerShape(14.dp)
+                                    )
+                                    .clickable {
+                                        HapticFeedbackHelper.performClick(view, context)
+                                        viewModel.selectMeaningLanguage(null)
+                                    }
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(end = 8.dp)
+                                ) {
+                                    Text(
+                                        text = "English (Default)",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = "Show English simple meanings & definitions",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                RadioButton(
+                                    selected = isEnglishSelected,
+                                    onClick = {
+                                        HapticFeedbackHelper.performClick(view, context)
+                                        viewModel.selectMeaningLanguage(null)
+                                    },
+                                    colors = RadioButtonDefaults.colors(
+                                        selectedColor = MaterialTheme.colorScheme.primary,
+                                        unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            MeaningLanguage.SUPPORTED_LANGUAGES.forEachIndexed { index, language ->
+                                val isSelected = selectedCode.equals(language.code, ignoreCase = true)
+                                if (index > 0) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(14.dp))
+                                        .background(
+                                            if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+                                            else MaterialTheme.colorScheme.surfaceContainerHigh
+                                        )
+                                        .border(
+                                            width = if (isSelected) 1.5.dp else 0.dp,
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                            shape = RoundedCornerShape(14.dp)
+                                        )
+                                        .clickable {
+                                            HapticFeedbackHelper.performClick(view, context)
+                                            viewModel.selectMeaningLanguage(if (isSelected) null else language.code)
+                                        }
+                                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(end = 8.dp)
+                                    ) {
+                                        Text(
+                                            text = language.englishName,
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = language.nativeName,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+
+                                    RadioButton(
+                                        selected = isSelected,
+                                        onClick = {
+                                            HapticFeedbackHelper.performClick(view, context)
+                                            viewModel.selectMeaningLanguage(if (isSelected) null else language.code)
+                                        },
+                                        colors = RadioButtonDefaults.colors(
+                                            selectedColor = MaterialTheme.colorScheme.primary,
+                                            unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    )
+                                }
+                            }
                         }
                     }
                 }

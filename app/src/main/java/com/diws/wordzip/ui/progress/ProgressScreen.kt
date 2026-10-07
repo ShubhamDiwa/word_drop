@@ -223,16 +223,10 @@ fun ProgressScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-            // Fixed Banner Ad at the bottom of the screen
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(vertical = 6.dp)
-            ) {
-                BannerAd()
-            }
+            // Fixed Banner Ad at the bottom of the screen (visible only when loaded)
+            BannerAd(
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
         }
     }
 }

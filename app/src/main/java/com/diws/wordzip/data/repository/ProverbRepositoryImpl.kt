@@ -120,17 +120,26 @@ class ProverbRepositoryImpl @Inject constructor(
     }
 
     override suspend fun syncProverbsWithRemote(): Result<Int> = withContext(Dispatchers.IO) {
-        val db = firestore ?: return@withContext Result.success(0)
+        val db = firestore ?: try {
+            FirebaseFirestore.getInstance()
+        } catch (e: Exception) {
+            Log.e(TAG, "FirebaseFirestore instance unavailable: ${e.message}")
+            return@withContext Result.failure(e)
+        }
         try {
             val allRemoteEntities = mutableListOf<ProverbEntity>()
             val seenIds = mutableSetOf<String>()
+            var totalFirestoreDocs = 0
+            var totalParsedCount = 0
 
             for (collName in CANDIDATE_PROVERB_COLLECTIONS) {
                 try {
                     val snapshot = db.collection(collName).get().await()
                     if (!snapshot.isEmpty) {
+                        totalFirestoreDocs += snapshot.documents.size
                         for (doc in snapshot.documents) {
                             val entities = parseProverbDoc(doc)
+                            totalParsedCount += entities.size
                             for (entity in entities) {
                                 if (seenIds.add(entity.id)) {
                                     val existing = proverbDao.getProverbById(entity.id)
@@ -149,10 +158,16 @@ class ProverbRepositoryImpl @Inject constructor(
                 }
             }
 
+            Log.d(TAG, "Firestore proverb count = $totalFirestoreDocs")
+            Log.d(TAG, "Parsed proverb count = $totalParsedCount")
+            Log.d(TAG, "Room insert count = ${allRemoteEntities.size}")
+
             if (allRemoteEntities.isNotEmpty()) {
                 proverbDao.insertProverbs(allRemoteEntities)
-                Log.d(TAG, "Successfully synced ${allRemoteEntities.size} proverbs from Firestore")
             }
+            val currentRoomCount = proverbDao.getCount()
+            Log.d(TAG, "Room proverb count = $currentRoomCount")
+
             Result.success(allRemoteEntities.size)
         } catch (e: Exception) {
             Log.w(TAG, "Failed to sync proverbs with Firestore: ${e.message}")

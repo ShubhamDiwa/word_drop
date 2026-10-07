@@ -522,14 +522,8 @@ fun VocabularyScreen(
                     }
                 }
 
-                // Fixed Banner Ad at the bottom of the screen
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp)
-                ) {
-                    BannerAd()
-                }
+                // Fixed Banner Ad at the bottom of the screen (visible only when loaded)
+                BannerAd()
             }
         }
 

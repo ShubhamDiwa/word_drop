@@ -1,8 +1,13 @@
 package com.diws.wordzip.ui.proverbs
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,7 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -39,8 +43,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -54,6 +61,16 @@ fun ProverbsScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
+    val infiniteTransition = rememberInfiniteTransition(label = "syncRotation")
+    val rotationAngle by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1000, easing = LinearEasing)
+        ),
+        label = "rotationAngle"
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -62,7 +79,7 @@ fun ProverbsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = 16.dp)
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -73,10 +90,14 @@ fun ProverbsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(
+                    modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.size(40.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = "Back",
@@ -86,51 +107,62 @@ fun ProverbsScreen(
 
                     Text(
                         text = "Proverbs (कहावतें)",
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                IconButton(
+                    onClick = { viewModel.syncWithRemote() },
+                    enabled = !state.isSyncing,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                 ) {
-                    IconButton(
-                        onClick = { viewModel.syncWithRemote() },
-                        enabled = !state.isSyncing,
+                    Icon(
+                        imageVector = Icons.Rounded.Refresh,
+                        contentDescription = "Sync from Firestore",
+                        tint = if (state.isSyncing) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Refresh,
-                            contentDescription = "Sync from Firestore",
-                            tint = if (state.isSyncing) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-
-                    IconButton(
-                        onClick = { viewModel.toggleFavoritesOnly() },
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                if (state.showFavoritesOnly) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                                else MaterialTheme.colorScheme.surfaceContainerHigh
+                            .size(20.dp)
+                            .then(
+                                if (state.isSyncing) Modifier.rotate(rotationAngle)
+                                else Modifier
                             )
-                    ) {
-                        Icon(
-                            imageVector = if (state.showFavoritesOnly) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                            contentDescription = "Show Favorites",
-                            tint = if (state.showFavoritesOnly) Color(0xFFE53935) else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(14.dp))
+
+            // Tab Selector: [ 📖 All Proverbs | ❤️ Favorites ]
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                    .padding(4.dp)
+            ) {
+                ProverbTabButton(
+                    text = "📖 All (${state.totalCount})",
+                    selected = state.selectedTab == ProverbTab.ALL,
+                    onClick = { viewModel.setTab(ProverbTab.ALL) },
+                    modifier = Modifier.weight(1f)
+                )
+
+                ProverbTabButton(
+                    text = "❤️ Favorites (${state.favoritesCount})",
+                    selected = state.selectedTab == ProverbTab.FAVORITES,
+                    onClick = { viewModel.setTab(ProverbTab.FAVORITES) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Search Bar
             OutlinedTextField(
@@ -139,7 +171,7 @@ fun ProverbsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text(
-                        text = "Search proverb",
+                        text = if (state.selectedTab == ProverbTab.FAVORITES) "Search favorite proverbs" else "Search proverbs",
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
@@ -171,61 +203,7 @@ fun ProverbsScreen(
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Category Filter Pills
-            if (state.availableCategories.isNotEmpty()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    // "All" Chip
-                    val isAllSelected = state.selectedCategory == null
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(
-                                if (isAllSelected) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.surfaceContainerHigh
-                            )
-                            .clickable { viewModel.onCategorySelected(null) }
-                            .padding(horizontal = 14.dp, vertical = 8.dp)
-                    ) {
-                        Text(
-                            text = "All",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isAllSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    // Category Chips
-                    state.availableCategories.forEach { category ->
-                        val isSelected = state.selectedCategory == category
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(
-                                    if (isSelected) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.surfaceContainerHigh
-                                )
-                                .clickable { viewModel.onCategorySelected(category) }
-                                .padding(horizontal = 14.dp, vertical = 8.dp)
-                        ) {
-                            Text(
-                                text = category,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-            }
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Proverbs List
             if (state.isLoading) {
@@ -239,19 +217,29 @@ fun ProverbsScreen(
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(horizontal = 32.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.FormatQuote,
+                            imageVector = if (state.selectedTab == ProverbTab.FAVORITES) Icons.Rounded.FavoriteBorder else Icons.Rounded.FormatQuote,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            tint = if (state.selectedTab == ProverbTab.FAVORITES) Color(0xFFE53935).copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                             modifier = Modifier.size(48.dp)
                         )
                         Text(
-                            text = if (state.showFavoritesOnly) "No favorite proverbs yet" else "No proverbs found",
+                            text = if (state.selectedTab == ProverbTab.FAVORITES) "No favorite proverbs yet" else "No proverbs found",
                             style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
+                        if (state.selectedTab == ProverbTab.FAVORITES) {
+                            Text(
+                                text = "Tap the heart icon on any proverb to save it here for quick access.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
             } else {
@@ -273,3 +261,39 @@ fun ProverbsScreen(
         }
     }
 }
+
+@Composable
+private fun ProverbTabButton(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor by animateColorAsState(
+        targetValue = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+        animationSpec = tween(250),
+        label = "tabBg"
+    )
+    val textColor by animateColorAsState(
+        targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = tween(250),
+        label = "tabText"
+    )
+
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(backgroundColor)
+            .clickable(onClick = onClick)
+            .padding(vertical = 10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            color = textColor
+        )
+    }
+}
+

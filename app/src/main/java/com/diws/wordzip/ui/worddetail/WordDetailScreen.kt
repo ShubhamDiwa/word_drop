@@ -38,6 +38,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,6 +49,7 @@ import com.diws.wordzip.domain.model.MeaningLanguage
 import com.diws.wordzip.ui.components.AppLoader
 import com.diws.wordzip.ui.components.AudioPlayerButton
 import com.diws.wordzip.ui.components.DifficultyChip
+import com.diws.wordzip.util.HapticFeedbackHelper
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -55,6 +58,8 @@ fun WordDetailScreen(
     viewModel: WordDetailViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val view = LocalView.current
 
     Box(
         modifier = Modifier
@@ -337,7 +342,14 @@ fun WordDetailScreen(
 
                 // Action Button: Mark as learned
                 Button(
-                    onClick = { viewModel.toggleLearned() },
+                    onClick = {
+                        val willBeLearned = !word.isLearned
+                        HapticFeedbackHelper.performClick(view, context)
+                        viewModel.toggleLearned()
+                        if (willBeLearned) {
+                            onBackClick()
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 20.dp)

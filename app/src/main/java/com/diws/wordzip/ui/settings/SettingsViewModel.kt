@@ -8,6 +8,7 @@ import com.diws.wordzip.data.preferences.UserSettings
 import com.diws.wordzip.domain.repository.WordRepository
 import com.diws.wordzip.notification.NotificationScheduler
 import com.diws.wordzip.notification.VocabularyNotificationManager
+import com.diws.wordzip.domain.usecase.SelectNextWordForNotificationUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,6 +22,7 @@ class SettingsViewModel @Inject constructor(
     private val preferencesRepository: UserPreferencesRepository,
     private val notificationManager: VocabularyNotificationManager,
     private val wordRepository: WordRepository,
+    private val selectNextWordUseCase: SelectNextWordForNotificationUseCase,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -129,7 +131,7 @@ class SettingsViewModel @Inject constructor(
     fun triggerTestNotification() {
         viewModelScope.launch {
             wordRepository.seedInitialDataIfNeeded()
-            val word = wordRepository.getUnlearnedWordsForNotification(1).firstOrNull()
+            val word = selectNextWordUseCase(isScheduledDelivery = false)
                 ?: wordRepository.getRandomWord()
             if (word != null) {
                 notificationManager.showVocabularyNotification(word)

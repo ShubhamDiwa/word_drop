@@ -1,5 +1,6 @@
 package com.diws.wordzip.ui.proverbs
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.diws.wordzip.domain.model.Proverb
@@ -15,12 +16,17 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+enum class ProverbTab {
+    ALL,
+    FAVORITES
+}
+
 data class ProverbsUiState(
     val searchQuery: String = "",
-    val selectedCategory: String? = null,
-    val showFavoritesOnly: Boolean = false,
+    val selectedTab: ProverbTab = ProverbTab.ALL,
     val proverbs: List<Proverb> = emptyList(),
-    val availableCategories: List<String> = emptyList(),
+    val totalCount: Int = 0,
+    val favoritesCount: Int = 0,
     val isLoading: Boolean = false,
     val isSyncing: Boolean = false
 )
@@ -33,39 +39,39 @@ class ProverbsViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
-    private val _selectedCategory = MutableStateFlow<String?>(null)
-    private val _showFavoritesOnly = MutableStateFlow(false)
+    private val _selectedTab = MutableStateFlow(ProverbTab.ALL)
     private val _isSyncing = MutableStateFlow(false)
 
     val uiState: StateFlow<ProverbsUiState> = combine(
         getProverbsUseCase(),
         _searchQuery,
-        _selectedCategory,
-        _showFavoritesOnly,
+        _selectedTab,
         _isSyncing
-    ) { allProverbs, query, category, favoritesOnly, syncing ->
-        val categories = allProverbs.map { it.category }.distinct().sorted()
+    ) { allProverbs, query, selectedTab, syncing ->
+        Log.d("ProverbsViewModel", "UI proverb count = ${allProverbs.size}")
+        val favoritesCount = allProverbs.count { it.isFavorite }
+        val totalCount = allProverbs.size
 
-        val filtered = allProverbs.filter { proverb ->
-            val matchesQuery = query.isBlank() ||
+        val tabFiltered = when (selectedTab) {
+            ProverbTab.ALL -> allProverbs
+            ProverbTab.FAVORITES -> allProverbs.filter { it.isFavorite }
+        }
+
+        val filtered = tabFiltered.filter { proverb ->
+            query.isBlank() ||
                     proverb.englishText.contains(query, ignoreCase = true) ||
                     proverb.hindiText.contains(query, ignoreCase = true) ||
                     (proverb.hindiEquivalent?.contains(query, ignoreCase = true) == true) ||
                     proverb.meaningEnglish.contains(query, ignoreCase = true) ||
                     proverb.meaningHindi.contains(query, ignoreCase = true)
-
-            val matchesCategory = category == null || proverb.category.equals(category, ignoreCase = true)
-            val matchesFavorites = !favoritesOnly || proverb.isFavorite
-
-            matchesQuery && matchesCategory && matchesFavorites
         }
 
         ProverbsUiState(
             searchQuery = query,
-            selectedCategory = category,
-            showFavoritesOnly = favoritesOnly,
+            selectedTab = selectedTab,
             proverbs = filtered,
-            availableCategories = categories,
+            totalCount = totalCount,
+            favoritesCount = favoritesCount,
             isLoading = false,
             isSyncing = syncing
         )
@@ -79,12 +85,8 @@ class ProverbsViewModel @Inject constructor(
         _searchQuery.value = query
     }
 
-    fun onCategorySelected(category: String?) {
-        _selectedCategory.value = if (_selectedCategory.value == category) null else category
-    }
-
-    fun toggleFavoritesOnly() {
-        _showFavoritesOnly.value = !_showFavoritesOnly.value
+    fun setTab(tab: ProverbTab) {
+        _selectedTab.value = tab
     }
 
     fun toggleFavorite(proverb: Proverb) {

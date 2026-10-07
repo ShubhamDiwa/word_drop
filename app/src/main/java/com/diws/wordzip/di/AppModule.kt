@@ -36,7 +36,7 @@ object AppModule {
             WordDatabase::class.java,
             WordDatabase.DATABASE_NAME
         )
-            .addMigrations(WordDatabase.MIGRATION_1_2, WordDatabase.MIGRATION_2_3)
+            .addMigrations(WordDatabase.MIGRATION_1_2, WordDatabase.MIGRATION_2_3, WordDatabase.MIGRATION_3_4)
             .fallbackToDestructiveMigration()
             .build()
     }

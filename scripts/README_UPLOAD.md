@@ -28,12 +28,15 @@ To allow a Python script to write to your database, you need a secret admin key 
 5. Move that downloaded `.json` file into this `scripts` folder.
 6. Rename the file to **`serviceAccountKey.json`**.
 
-### 3. Run the Script
-Open your terminal/command prompt, navigate to this `scripts` folder, and run:
+### 3. Run the Script Directly from Android Studio
 
-```bash
-cd D:\word_drop\scripts
-python upload_words.py
-```
+You do **NOT** need to publish a new app release to Google Play Store to add new words:
 
-The script will read your CSV, generate unique IDs (if you didn't provide them), add a current timestamp (`updatedAt`), and push them directly to your `words` collection in Firestore!
+1. Open [`scripts/words.csv`](file:///d:/word_drop/scripts/words.csv) in Android Studio.
+2. Add your new word rows.
+3. Open the **Terminal** tab at the bottom of Android Studio.
+4. Run:
+   ```bash
+   python scripts/upload_words.py
+   ```
+5. All live production users will automatically sync the new words upon opening the app!

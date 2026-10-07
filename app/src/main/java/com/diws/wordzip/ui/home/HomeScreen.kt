@@ -264,16 +264,10 @@ fun HomeScreen(
                 }
             }
             
-            // Fixed Banner Ad — pinned to bottom, always visible
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(vertical = 6.dp)
-            ) {
-                BannerAd()
-            }
+            // Fixed Banner Ad — pinned to bottom, visible only when loaded
+            BannerAd(
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
         }
     }
 }
